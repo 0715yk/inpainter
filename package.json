@@ -1,0 +1,30 @@
+{
+  "name": "image-prompt",
+  "version": "0.0.6",
+  "description": "masking images with brush and eraser tool",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "type": "module",
+  "scripts": {
+    "test": "mocha --reporter spec",
+    "build": "tsc"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/0715yk/fabric-image-maker.git"
+  },
+  "author": "bravehong",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/0715yk/fabric-image-maker/issues"
+  },
+  "homepage": "https://github.com/0715yk/fabric-image-maker#readme",
+  "devDependencies": {
+    "chai": "^4.3.7",
+    "mocha": "^10.2.0",
+    "typescript": "^5.1.6"
+  },
+  "dependencies": {
+    "konva": "^9.2.0"
+  }
+}
