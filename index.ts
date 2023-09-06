@@ -108,7 +108,7 @@ const imagePrompt = (function () {
             drawLayer.add(currentLine);
             const event = new CustomEvent("change", {
               detail: {
-                cnt: undoStack.length,
+                cnt: undoStack.length + 1,
               },
             });
             document.body.dispatchEvent(event);
