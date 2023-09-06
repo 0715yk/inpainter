@@ -78,13 +78,14 @@ const imagePrompt = (function () {
                     if (drawLayer !== null && pointerPosition !== null) {
                         const x = (pointerPosition.x - drawLayer.x()) / scale;
                         const y = (pointerPosition.y - drawLayer.y()) / scale;
+                        const minValue = 0.0001;
                         currentLine = new Konva.Line({
                             stroke: brushOptions === null || brushOptions === void 0 ? void 0 : brushOptions.color,
                             strokeWidth: (brushOptions === null || brushOptions === void 0 ? void 0 : brushOptions.strokeWidth) / scale,
                             globalCompositeOperation: drawingMode === "brush" ? "source-over" : "destination-out",
                             lineCap: "round",
                             lineJoin: "round",
-                            points: [x, y, x, y],
+                            points: [x, y, x + minValue, y + minValue],
                         });
                         drawLayer.add(currentLine);
                         const event = new CustomEvent("change", {

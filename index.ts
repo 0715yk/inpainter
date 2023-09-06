@@ -94,7 +94,7 @@ const imagePrompt = (function () {
           if (drawLayer !== null && pointerPosition !== null) {
             const x = (pointerPosition.x - drawLayer.x()) / scale;
             const y = (pointerPosition.y - drawLayer.y()) / scale;
-
+            const minValue = 0.0001;
             currentLine = new Konva.Line({
               stroke: brushOptions?.color,
               strokeWidth: brushOptions?.strokeWidth / scale,
@@ -102,7 +102,7 @@ const imagePrompt = (function () {
                 drawingMode === "brush" ? "source-over" : "destination-out",
               lineCap: "round",
               lineJoin: "round",
-              points: [x, y, x, y],
+              points: [x, y, x + minValue, y + minValue],
             });
 
             drawLayer.add(currentLine);
