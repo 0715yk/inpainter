@@ -30,6 +30,12 @@ const imagePrompt = (function () {
           redoStack.push(lineToRemove);
           lineToRemove.destroy();
           drawLayer.batchDraw();
+          const event = new CustomEvent("change", {
+            detail: {
+              cnt: undoStack.length,
+            },
+          });
+          document.body.dispatchEvent(event);
         }
       }
     },
@@ -40,6 +46,12 @@ const imagePrompt = (function () {
           undoStack.push(lineToRedraw);
           drawLayer.add(lineToRedraw);
           drawLayer.batchDraw();
+          const event = new CustomEvent("change", {
+            detail: {
+              cnt: undoStack.length,
+            },
+          });
+          document.body.dispatchEvent(event);
         }
       }
     },
@@ -94,6 +106,12 @@ const imagePrompt = (function () {
             });
 
             drawLayer.add(currentLine);
+            const event = new CustomEvent("change", {
+              detail: {
+                cnt: undoStack.length,
+              },
+            });
+            document.body.dispatchEvent(event);
           }
         }
       });
@@ -117,19 +135,25 @@ const imagePrompt = (function () {
 
       stage.on("mouseup", () => {
         if (!drawingModeOn) return;
+        if (!isPaint) return;
+
         isPaint = false;
-        redoStack.length = 0;
+
         if (currentLine !== null) {
+          redoStack.length = 0;
           undoStack.push(currentLine);
         }
       });
 
       const divElement = document.querySelector(container);
-      divElement?.addEventListener("mouseout", function () {
+      divElement?.addEventListener("mouseleave", function () {
+        if (!isPaint) return;
         if (!drawingModeOn) return;
+
         isPaint = false;
-        redoStack.length = 0;
+
         if (currentLine !== null) {
+          redoStack.length = 0;
           undoStack.push(currentLine);
         }
       });
@@ -309,3 +333,5 @@ const imagePrompt = (function () {
 })();
 
 export default imagePrompt;
+
+//
