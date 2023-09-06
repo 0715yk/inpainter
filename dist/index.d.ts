@@ -1,8 +1,8 @@
 declare const imagePrompt: {
     undo(): void;
     redo(): void;
-    init: ({ id, brushOption, width, height, }: {
-        id: string;
+    init: ({ container, brushOption, width, height, }: {
+        container: string;
         brushOption?: {
             strokeWidth: number;
             color: string;
@@ -20,10 +20,7 @@ declare const imagePrompt: {
     exportImage(): Promise<Blob | undefined>;
     setStrokeColor(color: string): void;
     setStrokeWidth(width: number | string): void;
-    setDrawingMode(mode: string): void;
-    setVisibility(status: boolean): void;
+    setDrawingMode(mode: "brush" | "eraser" | "on" | "off"): void;
     deleteImage(): void;
-    changeImage(): void;
-    setDrawLayer: (status: boolean) => void;
 };
 export default imagePrompt;
