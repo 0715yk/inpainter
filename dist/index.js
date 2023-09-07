@@ -21,12 +21,6 @@ const imagePrompt = (function () {
     let currentLine = null;
     const eventListener = new EventListeners();
     return {
-        on(eventType, eventCallback) {
-            eventListener.addEventListener(eventType, eventCallback);
-        },
-        off(eventType, eventCallback) {
-            eventListener.removeEventListener(eventType, eventCallback);
-        },
         undo() {
             var _a;
             if (undoStack.length > 0) {
@@ -51,7 +45,13 @@ const imagePrompt = (function () {
                 }
             }
         },
-        init: function ({ container, brushOption, width, height, }) {
+        on(eventType, eventCallback) {
+            eventListener.addEventListener(eventType, eventCallback);
+        },
+        off(eventType, eventCallback) {
+            eventListener.removeEventListener(eventType, eventCallback);
+        },
+        init: function ({ container, brushOption, width, height, on, }) {
             stage = new Konva.Stage({
                 container,
                 width,
@@ -120,6 +120,11 @@ const imagePrompt = (function () {
                     undoStack.push(currentLine);
                 }
             });
+            if (on !== undefined) {
+                Object.keys(on).forEach((eventName) => {
+                    eventListener.addEventListener(eventName, on[eventName]);
+                });
+            }
             if (container instanceof HTMLDivElement) {
                 const divElement = container;
                 divElement === null || divElement === void 0 ? void 0 : divElement.addEventListener("mouseleave", function () {

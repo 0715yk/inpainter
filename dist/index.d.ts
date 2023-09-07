@@ -1,9 +1,9 @@
 declare const imagePrompt: {
-    on(eventType: string, eventCallback: (...args: any) => void): void;
-    off(eventType: string, eventCallback: (...args: any) => void): void;
     undo(): void;
     redo(): void;
-    init: ({ container, brushOption, width, height, }: {
+    on(eventType: string, eventCallback: (...args: any) => void): void;
+    off(eventType: string, eventCallback: (...args: any) => void): void;
+    init: ({ container, brushOption, width, height, on, }: {
         container: string | HTMLDivElement;
         brushOption?: {
             strokeWidth: number;
@@ -11,6 +11,9 @@ declare const imagePrompt: {
         } | undefined;
         width?: number | undefined;
         height?: number | undefined;
+        on?: {
+            [eventType: string]: (arg: any) => void;
+        } | undefined;
     }) => void;
     importImage({ src, containerWidth, containerHeight, selectedWidth, selectedHeight, }: {
         src: string;

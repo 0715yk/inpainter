@@ -30,19 +30,12 @@ const imagePrompt = (function () {
   const eventListener = new EventListeners();
 
   return {
-    on(eventType: string, eventCallback: (...args: any) => void) {
-      eventListener.addEventListener(eventType, eventCallback);
-    },
-    off(eventType: string, eventCallback: (...args: any) => void) {
-      eventListener.removeEventListener(eventType, eventCallback);
-    },
     undo() {
       if (undoStack.length > 0) {
         const lineToRemove = undoStack.pop();
         if (lineToRemove !== undefined && drawLayer !== null) {
           lineToRemove.remove();
           redoStack.push(lineToRemove);
-
           drawLayer.batchDraw();
           eventListener.dispatch("change", undoStack.length ?? 0);
         }
@@ -59,16 +52,26 @@ const imagePrompt = (function () {
         }
       }
     },
+    on(eventType: string, eventCallback: (...args: any) => void) {
+      eventListener.addEventListener(eventType, eventCallback);
+    },
+    off(eventType: string, eventCallback: (...args: any) => void) {
+      eventListener.removeEventListener(eventType, eventCallback);
+    },
     init: function ({
       container,
       brushOption,
       width,
       height,
+      on,
     }: {
       container: string | HTMLDivElement;
       brushOption?: { strokeWidth: number; color: string };
       width?: number;
       height?: number;
+      on?: {
+        [eventType: string]: (arg: any) => void;
+      };
     }) {
       stage = new Konva.Stage({
         container,
@@ -143,6 +146,12 @@ const imagePrompt = (function () {
           undoStack.push(currentLine);
         }
       });
+
+      if (on !== undefined) {
+        Object.keys(on).forEach((eventName) => {
+          eventListener.addEventListener(eventName, on[eventName]);
+        });
+      }
 
       if (container instanceof HTMLDivElement) {
         const divElement = container;

@@ -5,7 +5,7 @@ export declare function getContainSize(containerWidth: number, containerHeight: 
     height: number;
 };
 export declare namespace Event {
-    type CallbackTypes = Record<string, (...args: any) => void>;
+    type CallbackTypes = Record<string, (...args: any[]) => void>;
     type Events<T extends CallbackTypes> = keyof T;
     type Callback<T extends CallbackTypes, E extends Events<T>> = T[E];
     type CallbackArgs<E extends Events<T>, T extends CallbackTypes> = Parameters<T[E]>;

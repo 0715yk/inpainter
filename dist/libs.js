@@ -54,6 +54,6 @@ export class EventListeners {
     }
     dispatch(event, ...args) {
         var _a;
-        (_a = this._listeners[event]) === null || _a === void 0 ? void 0 : _a.forEach((fn) => fn(args));
+        (_a = this._listeners[event]) === null || _a === void 0 ? void 0 : _a.forEach((fn) => fn(...args));
     }
 }

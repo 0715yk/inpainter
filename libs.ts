@@ -54,7 +54,7 @@ export function getContainSize(
 }
 
 export namespace Event {
-  export type CallbackTypes = Record<string, (...args: any) => void>;
+  export type CallbackTypes = Record<string, (...args: any[]) => void>;
 
   export type Events<T extends CallbackTypes> = keyof T;
   export type Callback<T extends CallbackTypes, E extends Events<T>> = T[E];
@@ -93,6 +93,6 @@ export class EventListeners<T extends Event.CallbackTypes> {
     event: E,
     ...args: Event.CallbackArgs<E, T>
   ) {
-    this._listeners[event]?.forEach((fn) => fn(args));
+    this._listeners[event]?.forEach((fn) => fn(...args));
   }
 }
