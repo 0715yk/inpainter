@@ -1,8 +1,10 @@
 declare const imagePrompt: {
+    on(eventType: string, eventCallback: (...args: any) => void): void;
+    off(eventType: string, eventCallback: (...args: any) => void): void;
     undo(): void;
     redo(): void;
     init: ({ container, brushOption, width, height, }: {
-        container: string;
+        container: string | HTMLDivElement;
         brushOption?: {
             strokeWidth: number;
             color: string;

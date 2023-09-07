@@ -37,3 +37,23 @@ export function getContainSize(containerWidth, containerHeight, outputWidth, out
         ? { width: containerWidth, height: containerWidth / outputRatio }
         : { width: containerHeight * outputRatio, height: containerHeight };
 }
+export class EventListeners {
+    constructor() {
+        this._listeners = {};
+    }
+    addEventListener(event, callback) {
+        var _a;
+        if (!(event in this._listeners)) {
+            this._listeners[event] = [];
+        }
+        (_a = this._listeners[event]) === null || _a === void 0 ? void 0 : _a.push(callback);
+    }
+    removeEventListener(event, callback) {
+        var _a;
+        this._listeners[event] = (_a = this._listeners[event]) === null || _a === void 0 ? void 0 : _a.filter((fn) => fn !== callback);
+    }
+    dispatch(event, ...args) {
+        var _a;
+        (_a = this._listeners[event]) === null || _a === void 0 ? void 0 : _a.forEach((fn) => fn(args));
+    }
+}

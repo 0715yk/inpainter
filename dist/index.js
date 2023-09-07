@@ -1,5 +1,5 @@
 import Konva from "konva";
-import { dataURItoBlob, getContainSize, getDrawCursor } from "./libs";
+import { dataURItoBlob, getContainSize, getDrawCursor, EventListeners, } from "./libs";
 const imagePrompt = (function () {
     const output = {
         width: 0,
@@ -19,36 +19,35 @@ const imagePrompt = (function () {
     let drawLayer = null;
     let imageLayer = null;
     let currentLine = null;
+    const eventListener = new EventListeners();
     return {
+        on(eventType, eventCallback) {
+            eventListener.addEventListener(eventType, eventCallback);
+        },
+        off(eventType, eventCallback) {
+            eventListener.removeEventListener(eventType, eventCallback);
+        },
         undo() {
+            var _a;
             if (undoStack.length > 0) {
                 const lineToRemove = undoStack.pop();
                 if (lineToRemove !== undefined && drawLayer !== null) {
+                    lineToRemove.remove();
                     redoStack.push(lineToRemove);
-                    lineToRemove.destroy();
                     drawLayer.batchDraw();
-                    const event = new CustomEvent("change", {
-                        detail: {
-                            cnt: undoStack.length,
-                        },
-                    });
-                    document.body.dispatchEvent(event);
+                    eventListener.dispatch("change", (_a = undoStack.length) !== null && _a !== void 0 ? _a : 0);
                 }
             }
         },
         redo() {
+            var _a;
             if (redoStack.length > 0) {
                 const lineToRedraw = redoStack.pop();
                 if (lineToRedraw !== undefined && drawLayer !== null) {
                     undoStack.push(lineToRedraw);
                     drawLayer.add(lineToRedraw);
                     drawLayer.batchDraw();
-                    const event = new CustomEvent("change", {
-                        detail: {
-                            cnt: undoStack.length,
-                        },
-                    });
-                    document.body.dispatchEvent(event);
+                    eventListener.dispatch("change", (_a = undoStack.length) !== null && _a !== void 0 ? _a : 0);
                 }
             }
         },
@@ -70,6 +69,7 @@ const imagePrompt = (function () {
                 brushOptions.strokeWidth = brushOption.strokeWidth;
             }
             stage.on("mousedown", () => {
+                var _a;
                 if (!drawingModeOn)
                     return;
                 isPaint = true;
@@ -88,12 +88,7 @@ const imagePrompt = (function () {
                             points: [x, y, x + minValue, y + minValue],
                         });
                         drawLayer.add(currentLine);
-                        const event = new CustomEvent("change", {
-                            detail: {
-                                cnt: undoStack.length + 1,
-                            },
-                        });
-                        document.body.dispatchEvent(event);
+                        eventListener.dispatch("change", (_a = undoStack.length + 1) !== null && _a !== void 0 ? _a : 0);
                     }
                 }
             });
@@ -125,18 +120,34 @@ const imagePrompt = (function () {
                     undoStack.push(currentLine);
                 }
             });
-            const divElement = document.querySelector(container);
-            divElement === null || divElement === void 0 ? void 0 : divElement.addEventListener("mouseleave", function () {
-                if (!isPaint)
-                    return;
-                if (!drawingModeOn)
-                    return;
-                isPaint = false;
-                if (currentLine !== null) {
-                    redoStack.length = 0;
-                    undoStack.push(currentLine);
-                }
-            });
+            if (container instanceof HTMLDivElement) {
+                const divElement = container;
+                divElement === null || divElement === void 0 ? void 0 : divElement.addEventListener("mouseleave", function () {
+                    if (!isPaint)
+                        return;
+                    if (!drawingModeOn)
+                        return;
+                    isPaint = false;
+                    if (currentLine !== null) {
+                        redoStack.length = 0;
+                        undoStack.push(currentLine);
+                    }
+                });
+            }
+            else {
+                const divElement = document.querySelector(container);
+                divElement === null || divElement === void 0 ? void 0 : divElement.addEventListener("mouseleave", function () {
+                    if (!isPaint)
+                        return;
+                    if (!drawingModeOn)
+                        return;
+                    isPaint = false;
+                    if (currentLine !== null) {
+                        redoStack.length = 0;
+                        undoStack.push(currentLine);
+                    }
+                });
+            }
         },
         importImage({ src, containerWidth, containerHeight, selectedWidth, selectedHeight, }) {
             const imageElement = new Image();

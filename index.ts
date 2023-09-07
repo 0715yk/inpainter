@@ -1,5 +1,10 @@
 import Konva from "konva";
-import { dataURItoBlob, getContainSize, getDrawCursor } from "./libs";
+import {
+  dataURItoBlob,
+  getContainSize,
+  getDrawCursor,
+  EventListeners,
+} from "./libs";
 
 const imagePrompt = (function () {
   const output = {
@@ -22,20 +27,24 @@ const imagePrompt = (function () {
   let imageLayer = null as null | Konva.Layer;
   let currentLine: Konva.Line | null = null;
 
+  const eventListener = new EventListeners();
+
   return {
+    on(eventType: string, eventCallback: (...args: any) => void) {
+      eventListener.addEventListener(eventType, eventCallback);
+    },
+    off(eventType: string, eventCallback: (...args: any) => void) {
+      eventListener.removeEventListener(eventType, eventCallback);
+    },
     undo() {
       if (undoStack.length > 0) {
         const lineToRemove = undoStack.pop();
         if (lineToRemove !== undefined && drawLayer !== null) {
+          lineToRemove.remove();
           redoStack.push(lineToRemove);
-          lineToRemove.destroy();
+
           drawLayer.batchDraw();
-          const event = new CustomEvent("change", {
-            detail: {
-              cnt: undoStack.length,
-            },
-          });
-          document.body.dispatchEvent(event);
+          eventListener.dispatch("change", undoStack.length ?? 0);
         }
       }
     },
@@ -46,12 +55,7 @@ const imagePrompt = (function () {
           undoStack.push(lineToRedraw);
           drawLayer.add(lineToRedraw);
           drawLayer.batchDraw();
-          const event = new CustomEvent("change", {
-            detail: {
-              cnt: undoStack.length,
-            },
-          });
-          document.body.dispatchEvent(event);
+          eventListener.dispatch("change", undoStack.length ?? 0);
         }
       }
     },
@@ -61,7 +65,7 @@ const imagePrompt = (function () {
       width,
       height,
     }: {
-      container: string;
+      container: string | HTMLDivElement;
       brushOption?: { strokeWidth: number; color: string };
       width?: number;
       height?: number;
@@ -106,12 +110,7 @@ const imagePrompt = (function () {
             });
 
             drawLayer.add(currentLine);
-            const event = new CustomEvent("change", {
-              detail: {
-                cnt: undoStack.length + 1,
-              },
-            });
-            document.body.dispatchEvent(event);
+            eventListener.dispatch("change", undoStack.length + 1 ?? 0);
           }
         }
       });
@@ -145,18 +144,33 @@ const imagePrompt = (function () {
         }
       });
 
-      const divElement = document.querySelector(container);
-      divElement?.addEventListener("mouseleave", function () {
-        if (!isPaint) return;
-        if (!drawingModeOn) return;
+      if (container instanceof HTMLDivElement) {
+        const divElement = container;
+        divElement?.addEventListener("mouseleave", function () {
+          if (!isPaint) return;
+          if (!drawingModeOn) return;
 
-        isPaint = false;
+          isPaint = false;
 
-        if (currentLine !== null) {
-          redoStack.length = 0;
-          undoStack.push(currentLine);
-        }
-      });
+          if (currentLine !== null) {
+            redoStack.length = 0;
+            undoStack.push(currentLine);
+          }
+        });
+      } else {
+        const divElement = document.querySelector(container);
+        divElement?.addEventListener("mouseleave", function () {
+          if (!isPaint) return;
+          if (!drawingModeOn) return;
+
+          isPaint = false;
+
+          if (currentLine !== null) {
+            redoStack.length = 0;
+            undoStack.push(currentLine);
+          }
+        });
+      }
     },
     importImage({
       src,
