@@ -36,8 +36,12 @@ const imagePrompt = (function () {
         if (lineToRemove !== undefined && drawLayer !== null) {
           lineToRemove.remove();
           redoStack.push(lineToRemove);
+
           drawLayer.batchDraw();
-          eventListener.dispatch("change", undoStack.length ?? 0);
+          eventListener.dispatch("change", {
+            cnt: undoStack.length,
+            stage: stage?.toJSON(),
+          });
         }
       }
     },
@@ -48,13 +52,18 @@ const imagePrompt = (function () {
           undoStack.push(lineToRedraw);
           drawLayer.add(lineToRedraw);
           drawLayer.batchDraw();
-          eventListener.dispatch("change", undoStack.length ?? 0);
+          eventListener.dispatch("change", {
+            cnt: undoStack.length ?? 0,
+            stage: stage?.toJSON(),
+          });
         }
       }
     },
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     on(eventType: string, eventCallback: (...args: any) => void) {
       eventListener.addEventListener(eventType, eventCallback);
     },
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     off(eventType: string, eventCallback: (...args: any) => void) {
       eventListener.removeEventListener(eventType, eventCallback);
     },
@@ -64,24 +73,44 @@ const imagePrompt = (function () {
       width,
       height,
       on,
+      mode,
     }: {
       container: string | HTMLDivElement;
       brushOption?: { strokeWidth: number; color: string };
       width?: number;
       height?: number;
       on?: {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         [eventType: string]: (arg: any) => void;
       };
+      mode?: {
+        type: "cache" | "init";
+        stage?: string;
+      };
     }) {
-      stage = new Konva.Stage({
-        container,
-        width,
-        height,
-      });
-      imageLayer = new Konva.Layer();
-      drawLayer = new Konva.Layer({
-        id: "drawLayer",
-      });
+      if (mode?.type === "cache") {
+        if (!mode?.stage) return;
+
+        stage = Konva.Node.create(mode?.stage, container) as Konva.Stage;
+
+        const iLayer = stage.findOne("#imageLayer") as Konva.Layer;
+        const dLayer = stage.findOne("#drawLayer") as Konva.Layer;
+        imageLayer = iLayer;
+        drawLayer = dLayer;
+      } else {
+        stage = new Konva.Stage({
+          container,
+          width,
+          height,
+        });
+
+        imageLayer = new Konva.Layer({
+          id: "imageLayer",
+        });
+        drawLayer = new Konva.Layer({
+          id: "drawLayer",
+        });
+      }
 
       stage.add(imageLayer);
       stage.add(drawLayer);
@@ -113,7 +142,6 @@ const imagePrompt = (function () {
             });
 
             drawLayer.add(currentLine);
-            eventListener.dispatch("change", undoStack.length + 1 ?? 0);
           }
         }
       });
@@ -144,6 +172,10 @@ const imagePrompt = (function () {
         if (currentLine !== null) {
           redoStack.length = 0;
           undoStack.push(currentLine);
+          eventListener.dispatch("change", {
+            cnt: undoStack.length + 1 ?? 0,
+            stage: stage?.toJSON(),
+          });
         }
       });
 
@@ -164,6 +196,10 @@ const imagePrompt = (function () {
           if (currentLine !== null) {
             redoStack.length = 0;
             undoStack.push(currentLine);
+            eventListener.dispatch("change", {
+              cnt: undoStack.length + 1 ?? 0,
+              stage: stage?.toJSON(),
+            });
           }
         });
       } else {
@@ -177,6 +213,10 @@ const imagePrompt = (function () {
           if (currentLine !== null) {
             redoStack.length = 0;
             undoStack.push(currentLine);
+            eventListener.dispatch("change", {
+              cnt: undoStack.length + 1 ?? 0,
+              stage: stage?.toJSON(),
+            });
           }
         });
       }
@@ -259,6 +299,7 @@ const imagePrompt = (function () {
 
       imageElement.src = src;
     },
+    resizeAndCenterCrop() {},
     exportImage() {
       const canvas = document.createElement("canvas");
       const context = canvas.getContext("2d");
@@ -354,7 +395,6 @@ const imagePrompt = (function () {
     },
   };
 })();
-
 export default imagePrompt;
 
 //
