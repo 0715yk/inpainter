@@ -12,8 +12,9 @@ const imagePrompt = (function () {
     height: 0,
     image: null,
   };
-  const undoStack: Konva.Line[] = [];
-  const redoStack: Konva.Line[] = [];
+  let history: Konva.Line[] = [];
+  let historyStep = 0;
+
   const brushOptions = {
     strokeWidth: 30,
     color: "#ffffff",
@@ -30,30 +31,37 @@ const imagePrompt = (function () {
   const eventListener = new EventListeners();
 
   return {
+    goTo(index: number) {
+      drawLayer?.destroyChildren();
+      history = history.slice(index);
+      history.forEach((line) => {
+        drawLayer?.add(line);
+      });
+      historyStep = index;
+    },
     undo() {
-      if (undoStack.length > 0) {
-        const lineToRemove = undoStack.pop();
+      if (historyStep !== 0) {
+        historyStep--;
+        const lineToRemove = history[historyStep];
         if (lineToRemove !== undefined && drawLayer !== null) {
           lineToRemove.remove();
-          redoStack.push(lineToRemove);
-
           drawLayer.batchDraw();
           eventListener.dispatch("change", {
-            cnt: undoStack.length,
+            cnt: historyStep,
             stage: stage?.toJSON(),
           });
         }
       }
     },
     redo() {
-      if (redoStack.length > 0) {
-        const lineToRedraw = redoStack.pop();
+      if (historyStep !== history.length - 1) {
+        historyStep++;
+        const lineToRedraw = history[historyStep];
         if (lineToRedraw !== undefined && drawLayer !== null) {
-          undoStack.push(lineToRedraw);
           drawLayer.add(lineToRedraw);
           drawLayer.batchDraw();
           eventListener.dispatch("change", {
-            cnt: undoStack.length ?? 0,
+            cnt: historyStep,
             stage: stage?.toJSON(),
           });
         }
@@ -73,7 +81,7 @@ const imagePrompt = (function () {
       width,
       height,
       on,
-      mode,
+      cache,
     }: {
       container: string | HTMLDivElement;
       brushOption?: { strokeWidth: number; color: string };
@@ -83,16 +91,10 @@ const imagePrompt = (function () {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         [eventType: string]: (arg: any) => void;
       };
-      mode?: {
-        type: "cache" | "init";
-        stage?: string;
-      };
+      cache?: string;
     }) {
-      if (mode?.type === "cache") {
-        if (!mode?.stage) return;
-
-        stage = Konva.Node.create(mode?.stage, container) as Konva.Stage;
-
+      if (cache) {
+        stage = Konva.Node.create(cache, container) as Konva.Stage;
         const iLayer = stage.findOne("#imageLayer") as Konva.Layer;
         const dLayer = stage.findOne("#drawLayer") as Konva.Layer;
         imageLayer = iLayer;
@@ -170,10 +172,10 @@ const imagePrompt = (function () {
         isPaint = false;
 
         if (currentLine !== null) {
-          redoStack.length = 0;
-          undoStack.push(currentLine);
+          history = history.concat([currentLine]);
+          historyStep++;
           eventListener.dispatch("change", {
-            cnt: undoStack.length + 1 ?? 0,
+            cnt: historyStep,
             stage: stage?.toJSON(),
           });
         }
@@ -194,10 +196,10 @@ const imagePrompt = (function () {
           isPaint = false;
 
           if (currentLine !== null) {
-            redoStack.length = 0;
-            undoStack.push(currentLine);
+            history = history.concat([currentLine]);
+            historyStep++;
             eventListener.dispatch("change", {
-              cnt: undoStack.length + 1 ?? 0,
+              cnt: historyStep,
               stage: stage?.toJSON(),
             });
           }
@@ -211,10 +213,10 @@ const imagePrompt = (function () {
           isPaint = false;
 
           if (currentLine !== null) {
-            redoStack.length = 0;
-            undoStack.push(currentLine);
+            history = history.concat([currentLine]);
+            historyStep++;
             eventListener.dispatch("change", {
-              cnt: undoStack.length + 1 ?? 0,
+              cnt: historyStep,
               stage: stage?.toJSON(),
             });
           }
@@ -389,8 +391,8 @@ const imagePrompt = (function () {
       if (drawLayer !== null && imageLayer !== null) {
         drawLayer.destroyChildren();
         imageLayer.destroyChildren();
-        undoStack.length = 0;
-        redoStack.length = 0;
+        history = [];
+        historyStep = 0;
       }
     },
   };
