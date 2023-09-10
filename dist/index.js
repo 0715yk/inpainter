@@ -6,8 +6,8 @@ const imagePrompt = (function () {
         height: 0,
         image: null,
     };
-    const undoStack = [];
-    const redoStack = [];
+    let history = [];
+    let historyStep = 0;
     const brushOptions = {
         strokeWidth: 30,
         color: "#ffffff",
@@ -21,28 +21,59 @@ const imagePrompt = (function () {
     let currentLine = null;
     const eventListener = new EventListeners();
     return {
+        goTo(index) {
+            if (drawLayer !== null) {
+                history = history.filter((line, _) => {
+                    if (_ >= index) {
+                        line === null || line === void 0 ? void 0 : line.remove();
+                        return false;
+                    }
+                    else {
+                        if (drawLayer !== null) {
+                            drawLayer.add(line);
+                            return true;
+                        }
+                        else {
+                            return false;
+                        }
+                    }
+                });
+                drawLayer.batchDraw();
+                historyStep = index;
+                eventListener.dispatch("change", {
+                    cnt: historyStep,
+                    stage: stage === null || stage === void 0 ? void 0 : stage.toJSON(),
+                });
+            }
+        },
         undo() {
-            var _a;
-            if (undoStack.length > 0) {
-                const lineToRemove = undoStack.pop();
-                if (lineToRemove !== undefined && drawLayer !== null) {
-                    lineToRemove.remove();
-                    redoStack.push(lineToRemove);
-                    drawLayer.batchDraw();
-                    eventListener.dispatch("change", (_a = undoStack.length) !== null && _a !== void 0 ? _a : 0);
-                }
+            if (historyStep === 0) {
+                return;
+            }
+            historyStep--;
+            const lineToRemove = history[historyStep];
+            if (lineToRemove !== undefined && drawLayer !== null) {
+                lineToRemove.remove();
+                drawLayer.batchDraw();
+                eventListener.dispatch("change", {
+                    cnt: historyStep,
+                    stage: stage === null || stage === void 0 ? void 0 : stage.toJSON(),
+                });
             }
         },
         redo() {
-            var _a;
-            if (redoStack.length > 0) {
-                const lineToRedraw = redoStack.pop();
-                if (lineToRedraw !== undefined && drawLayer !== null) {
-                    undoStack.push(lineToRedraw);
-                    drawLayer.add(lineToRedraw);
-                    drawLayer.batchDraw();
-                    eventListener.dispatch("change", (_a = undoStack.length) !== null && _a !== void 0 ? _a : 0);
-                }
+            if (historyStep === history.length) {
+                return;
+            }
+            const lineToRedraw = history[historyStep];
+            if (lineToRedraw !== undefined && drawLayer !== null) {
+                drawLayer.add(lineToRedraw);
+                historyStep++;
+                drawLayer.batchDraw();
+                eventListener.dispatch("change", {
+                    cnt: historyStep,
+                    stage: stage === null || stage === void 0 ? void 0 : stage.toJSON(),
+                });
             }
         },
         on(eventType, eventCallback) {
@@ -51,16 +82,27 @@ const imagePrompt = (function () {
         off(eventType, eventCallback) {
             eventListener.removeEventListener(eventType, eventCallback);
         },
-        init: function ({ container, brushOption, width, height, on, }) {
-            stage = new Konva.Stage({
-                container,
-                width,
-                height,
-            });
-            imageLayer = new Konva.Layer();
-            drawLayer = new Konva.Layer({
-                id: "drawLayer",
-            });
+        init: function ({ container, brushOption, width, height, on, cache, }) {
+            if (cache) {
+                stage = Konva.Node.create(cache, container);
+                const iLayer = stage.findOne("#imageLayer");
+                const dLayer = stage.findOne("#drawLayer");
+                imageLayer = iLayer;
+                drawLayer = dLayer;
+            }
+            else {
+                stage = new Konva.Stage({
+                    container,
+                    width,
+                    height,
+                });
+                imageLayer = new Konva.Layer({
+                    id: "imageLayer",
+                });
+                drawLayer = new Konva.Layer({
+                    id: "drawLayer",
+                });
+            }
             stage.add(imageLayer);
             stage.add(drawLayer);
             let isPaint = false;
@@ -69,7 +111,6 @@ const imagePrompt = (function () {
                 brushOptions.strokeWidth = brushOption.strokeWidth;
             }
             stage.on("mousedown", () => {
-                var _a;
                 if (!drawingModeOn)
                     return;
                 isPaint = true;
@@ -88,7 +129,6 @@ const imagePrompt = (function () {
                             points: [x, y, x + minValue, y + minValue],
                         });
                         drawLayer.add(currentLine);
-                        eventListener.dispatch("change", (_a = undoStack.length + 1) !== null && _a !== void 0 ? _a : 0);
                     }
                 }
             });
@@ -116,8 +156,13 @@ const imagePrompt = (function () {
                     return;
                 isPaint = false;
                 if (currentLine !== null) {
-                    redoStack.length = 0;
-                    undoStack.push(currentLine);
+                    history = history.slice(0, historyStep);
+                    history.push(currentLine);
+                    historyStep++;
+                    eventListener.dispatch("change", {
+                        cnt: historyStep,
+                        stage: stage === null || stage === void 0 ? void 0 : stage.toJSON(),
+                    });
                 }
             });
             if (on !== undefined) {
@@ -134,8 +179,13 @@ const imagePrompt = (function () {
                         return;
                     isPaint = false;
                     if (currentLine !== null) {
-                        redoStack.length = 0;
-                        undoStack.push(currentLine);
+                        history = history.slice(0, historyStep + 1);
+                        history.push(currentLine);
+                        historyStep++;
+                        eventListener.dispatch("change", {
+                            cnt: historyStep,
+                            stage: stage === null || stage === void 0 ? void 0 : stage.toJSON(),
+                        });
                     }
                 });
             }
@@ -148,8 +198,13 @@ const imagePrompt = (function () {
                         return;
                     isPaint = false;
                     if (currentLine !== null) {
-                        redoStack.length = 0;
-                        undoStack.push(currentLine);
+                        history = history.slice(0, historyStep + 1);
+                        history.push(currentLine);
+                        historyStep++;
+                        eventListener.dispatch("change", {
+                            cnt: historyStep,
+                            stage: stage === null || stage === void 0 ? void 0 : stage.toJSON(),
+                        });
                     }
                 });
             }
@@ -278,11 +333,10 @@ const imagePrompt = (function () {
             if (drawLayer !== null && imageLayer !== null) {
                 drawLayer.destroyChildren();
                 imageLayer.destroyChildren();
-                undoStack.length = 0;
-                redoStack.length = 0;
+                history = [];
+                historyStep = 0;
             }
         },
     };
 })();
 export default imagePrompt;
-//

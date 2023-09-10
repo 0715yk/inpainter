@@ -20,6 +20,7 @@
   },
   "homepage": "https://github.com/0715yk/fabric-image-maker#readme",
   "devDependencies": {
+    "@types/node": "^20.6.0",
     "chai": "^4.3.7",
     "mocha": "^10.2.0",
     "typescript": "^5.1.6"

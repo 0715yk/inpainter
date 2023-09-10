@@ -32,46 +32,65 @@ const imagePrompt = (function () {
 
   return {
     goTo(index: number) {
-      drawLayer?.destroyChildren();
-      history = history.slice(index);
-      history.forEach((line) => {
-        drawLayer?.add(line);
-      });
-      historyStep = index;
+      if (drawLayer !== null) {
+        history = history.filter((line, _) => {
+          if (_ >= index) {
+            line?.remove();
+            return false;
+          } else {
+            if (drawLayer !== null) {
+              drawLayer.add(line);
+              return true;
+            } else {
+              return false;
+            }
+          }
+        });
+
+        drawLayer.batchDraw();
+        historyStep = index;
+        eventListener.dispatch("change", {
+          cnt: historyStep,
+          stage: stage?.toJSON(),
+        });
+      }
     },
     undo() {
-      if (historyStep !== 0) {
-        historyStep--;
-        const lineToRemove = history[historyStep];
-        if (lineToRemove !== undefined && drawLayer !== null) {
-          lineToRemove.remove();
-          drawLayer.batchDraw();
-          eventListener.dispatch("change", {
-            cnt: historyStep,
-            stage: stage?.toJSON(),
-          });
-        }
+      if (historyStep === 0) {
+        return;
+      }
+      historyStep--;
+      const lineToRemove = history[historyStep];
+      if (lineToRemove !== undefined && drawLayer !== null) {
+        lineToRemove.remove();
+        drawLayer.batchDraw();
+        eventListener.dispatch("change", {
+          cnt: historyStep,
+          stage: stage?.toJSON(),
+        });
       }
     },
     redo() {
-      if (historyStep !== history.length - 1) {
+      if (historyStep === history.length) {
+        return;
+      }
+
+      const lineToRedraw = history[historyStep];
+      if (lineToRedraw !== undefined && drawLayer !== null) {
+        drawLayer.add(lineToRedraw);
         historyStep++;
-        const lineToRedraw = history[historyStep];
-        if (lineToRedraw !== undefined && drawLayer !== null) {
-          drawLayer.add(lineToRedraw);
-          drawLayer.batchDraw();
-          eventListener.dispatch("change", {
-            cnt: historyStep,
-            stage: stage?.toJSON(),
-          });
-        }
+        drawLayer.batchDraw();
+        eventListener.dispatch("change", {
+          cnt: historyStep,
+          stage: stage?.toJSON(),
+        });
       }
     },
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
     on(eventType: string, eventCallback: (...args: any) => void) {
       eventListener.addEventListener(eventType, eventCallback);
     },
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
     off(eventType: string, eventCallback: (...args: any) => void) {
       eventListener.removeEventListener(eventType, eventCallback);
     },
@@ -88,7 +107,6 @@ const imagePrompt = (function () {
       width?: number;
       height?: number;
       on?: {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         [eventType: string]: (arg: any) => void;
       };
       cache?: string;
@@ -127,6 +145,7 @@ const imagePrompt = (function () {
       stage.on("mousedown", () => {
         if (!drawingModeOn) return;
         isPaint = true;
+
         if (stage !== null) {
           const pointerPosition = stage.getPointerPosition();
           if (drawLayer !== null && pointerPosition !== null) {
@@ -172,7 +191,8 @@ const imagePrompt = (function () {
         isPaint = false;
 
         if (currentLine !== null) {
-          history = history.concat([currentLine]);
+          history = history.slice(0, historyStep);
+          history.push(currentLine);
           historyStep++;
           eventListener.dispatch("change", {
             cnt: historyStep,
@@ -196,7 +216,8 @@ const imagePrompt = (function () {
           isPaint = false;
 
           if (currentLine !== null) {
-            history = history.concat([currentLine]);
+            history = history.slice(0, historyStep + 1);
+            history.push(currentLine);
             historyStep++;
             eventListener.dispatch("change", {
               cnt: historyStep,
@@ -213,7 +234,8 @@ const imagePrompt = (function () {
           isPaint = false;
 
           if (currentLine !== null) {
-            history = history.concat([currentLine]);
+            history = history.slice(0, historyStep + 1);
+            history.push(currentLine);
             historyStep++;
             eventListener.dispatch("change", {
               cnt: historyStep,
@@ -301,7 +323,7 @@ const imagePrompt = (function () {
 
       imageElement.src = src;
     },
-    resizeAndCenterCrop() {},
+
     exportImage() {
       const canvas = document.createElement("canvas");
       const context = canvas.getContext("2d");
@@ -397,6 +419,5 @@ const imagePrompt = (function () {
     },
   };
 })();
-export default imagePrompt;
 
-//
+export default imagePrompt;
