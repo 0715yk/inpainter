@@ -497,6 +497,13 @@ const imagePrompt = (function () {
         historyStep = 0;
       }
     },
+    destroyStage() {
+      if (stage !== null) {
+        stage.destroyChildren();
+        stage.destroy();
+        stage = null;
+      }
+    },
   };
 })();
 

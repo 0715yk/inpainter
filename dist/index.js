@@ -83,6 +83,7 @@ const imagePrompt = (function () {
             eventListener.removeEventListener(eventType, eventCallback);
         },
         init: function ({ container, brushOption, width, height, on, cache, }) {
+            var _a;
             if (cache) {
                 stage = Konva.Node.create(cache, container);
                 const iLayer = stage.findOne("#imageLayer");
@@ -171,7 +172,7 @@ const imagePrompt = (function () {
                 });
             }
             if (container instanceof HTMLDivElement) {
-                const divElement = container;
+                const divElement = container === null || container === void 0 ? void 0 : container.firstChild;
                 divElement === null || divElement === void 0 ? void 0 : divElement.addEventListener("mouseleave", function () {
                     if (!isPaint)
                         return;
@@ -190,7 +191,7 @@ const imagePrompt = (function () {
                 });
             }
             else {
-                const divElement = document.querySelector(container);
+                const divElement = (_a = document.querySelector(container)) === null || _a === void 0 ? void 0 : _a.firstChild;
                 divElement === null || divElement === void 0 ? void 0 : divElement.addEventListener("mouseleave", function () {
                     if (!isPaint)
                         return;
@@ -257,6 +258,72 @@ const imagePrompt = (function () {
                 drawLayer.moveToTop();
             };
             imageElement.src = src;
+        },
+        exportMask() {
+            const canvas = document.createElement("canvas");
+            const context = canvas.getContext("2d");
+            const foreground = new Image();
+            canvas.width = output.width;
+            canvas.height = output.height;
+            return new Promise((resolve) => {
+                foreground.onload = resolve;
+                if (stage !== null) {
+                    const copyStage = stage.clone();
+                    copyStage.container().style.backgroundColor = "black";
+                    const copyImageLayer = copyStage.findOne("#imageLayer");
+                    copyImageLayer.hide();
+                    foreground.src = copyStage.toDataURL({ pixelRatio: 2 });
+                }
+            }).then(() => {
+                if (context !== null) {
+                    context.drawImage(foreground, 0, 0, output.width, output.height);
+                    const drawingCanvas = canvas;
+                    if (drawingCanvas !== undefined) {
+                        const context = drawingCanvas.getContext("2d");
+                        if (context !== null) {
+                            context.globalCompositeOperation = "destination-over";
+                            context.fillStyle = "black";
+                            context.fillRect(0, 0, drawingCanvas.width, drawingCanvas.height);
+                            context.drawImage(drawingCanvas, 0, 0);
+                            const imgData = context.getImageData(0, 0, drawingCanvas.width, drawingCanvas.height);
+                            for (let i = 0; i < imgData.data.length; i += 4) {
+                                const count = imgData.data[i] + imgData.data[i + 1] + imgData.data[i + 2];
+                                let colour = 0;
+                                if (count > 383)
+                                    colour = 255;
+                                imgData.data[i] = colour;
+                                imgData.data[i + 1] = colour;
+                                imgData.data[i + 2] = colour;
+                                imgData.data[i + 3] = 255;
+                            }
+                            context.putImageData(imgData, 0, 0);
+                            const pngURL = drawingCanvas.toDataURL("image/png");
+                            return dataURItoBlob(pngURL);
+                        }
+                    }
+                }
+            });
+        },
+        exportMaskingImage() {
+            const canvas = document.createElement("canvas");
+            const context = canvas.getContext("2d");
+            const foreground = new Image();
+            canvas.width = output.width;
+            canvas.height = output.height;
+            return new Promise((resolve) => {
+                foreground.onload = resolve;
+                if (stage !== null) {
+                    const copyStage = stage.clone();
+                    const copyDrawLayer = copyStage.findOne("#drawLayer");
+                    copyDrawLayer.hide();
+                    foreground.src = copyStage.toDataURL({ pixelRatio: 2 });
+                }
+            }).then(() => {
+                if (context !== null) {
+                    context.drawImage(foreground, 0, 0, output.width, output.height);
+                    return dataURItoBlob(canvas.toDataURL("image/png"));
+                }
+            });
         },
         exportImage() {
             const canvas = document.createElement("canvas");
@@ -335,6 +402,13 @@ const imagePrompt = (function () {
                 imageLayer.destroyChildren();
                 history = [];
                 historyStep = 0;
+            }
+        },
+        destroyStage() {
+            if (stage !== null) {
+                stage.destroyChildren();
+                stage.destroy();
+                stage = null;
             }
         },
     };
