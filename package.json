@@ -1,6 +1,6 @@
 {
   "name": "image-prompt",
-  "version": "0.0.13",
+  "version": "0.0.14",
   "description": "masking images with brush and eraser tool",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
