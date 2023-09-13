@@ -413,7 +413,8 @@ const inpainter = (function () {
           copyStage.container().style.backgroundColor = "black";
           const copyImageLayer = copyStage.findOne("#imageLayer");
           copyImageLayer.hide();
-
+          const copyDrawLayer = copyStage.findOne("#drawLayer");
+          copyDrawLayer.show();
           foreground.src = copyStage.toDataURL({ pixelRatio: 2 });
         }
       }).then(() => {

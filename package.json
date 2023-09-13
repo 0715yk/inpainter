@@ -16,9 +16,9 @@
   "author": "bravehong",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/0715yk/fabric-image-maker/issues"
+    "url": "https://github.com/0715yk/inpainter/issues"
   },
-  "homepage": "https://github.com/0715yk/fabric-image-maker#readme",
+  "homepage": "https://github.com/0715yk/inpainter#readme",
   "devDependencies": {
     "@types/node": "^20.6.0",
     "chai": "^4.3.7",
