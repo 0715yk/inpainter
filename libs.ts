@@ -5,12 +5,8 @@ export function getDrawCursor(
 ) {
   const circle = `
       <svg
-        height="${strokeWidth}"
-        fill="${brushColor}"
         viewBox="0 0 ${strokeWidth * 2} ${strokeWidth * 2}"
-        width="${strokeWidth}"
         xmlns="http://www.w3.org/2000/svg"
-        stroke="${strokeColor ? strokeColor : "black"}"
       >
         <circle
           cx="50%"

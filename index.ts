@@ -6,7 +6,7 @@ import {
   EventListeners,
 } from "./libs";
 
-const imagePrompt = (function () {
+const inpainter = (function () {
   const output = {
     width: 0,
     height: 0,
@@ -323,31 +323,6 @@ const imagePrompt = (function () {
 
       imageElement.src = src;
     },
-    exportImage() {
-      const canvas = document.createElement("canvas");
-      const context = canvas.getContext("2d");
-      const foreground = new Image();
-
-      canvas.width = output.width;
-      canvas.height = output.height;
-
-      return new Promise((resolve) => {
-        foreground.onload = resolve;
-
-        if (stage !== null) {
-          const copyStage = stage.clone();
-          const copyDrawLayer = copyStage.findOne("#drawLayer");
-          copyDrawLayer.show();
-
-          foreground.src = copyStage.toDataURL({ pixelRatio: 2 });
-        }
-      }).then(() => {
-        if (stage !== null && context !== null) {
-          context.drawImage(foreground, 0, 0, output.width, output.height);
-          return dataURItoBlob(canvas.toDataURL("image/png"));
-        }
-      });
-    },
     setStrokeColor(color: string) {
       brushOptions.color = color;
       if (!drawingModeOn || drawingMode === "eraser") return;
@@ -423,7 +398,86 @@ const imagePrompt = (function () {
         stage = null;
       }
     },
+    exportMask() {
+      const canvas = document.createElement("canvas");
+      const context = canvas.getContext("2d");
+      const foreground = new Image();
+
+      canvas.width = output.width;
+      canvas.height = output.height;
+
+      return new Promise((resolve) => {
+        foreground.onload = resolve;
+        if (stage !== null) {
+          const copyStage = stage.clone();
+          copyStage.container().style.backgroundColor = "black";
+          const copyImageLayer = copyStage.findOne("#imageLayer");
+          copyImageLayer.hide();
+
+          foreground.src = copyStage.toDataURL({ pixelRatio: 2 });
+        }
+      }).then(() => {
+        if (context !== null) {
+          context.drawImage(foreground, 0, 0, output.width, output.height);
+          const drawingCanvas = canvas;
+          if (drawingCanvas !== undefined) {
+            const context = drawingCanvas.getContext("2d");
+            if (context !== null) {
+              context.globalCompositeOperation = "source-in";
+              context.fillStyle = "white";
+              context.fillRect(0, 0, drawingCanvas.width, drawingCanvas.height);
+              context.drawImage(drawingCanvas, 0, 0);
+
+              const imgData = context.getImageData(
+                0,
+                0,
+                drawingCanvas.width,
+                drawingCanvas.height
+              );
+
+              for (let i = 0; i < imgData.data.length; i += 4) {
+                const count =
+                  imgData.data[i] + imgData.data[i + 1] + imgData.data[i + 2];
+                let colour = 0;
+                if (count > 383) colour = 255;
+
+                imgData.data[i] = colour;
+                imgData.data[i + 1] = colour;
+                imgData.data[i + 2] = colour;
+                imgData.data[i + 3] = 255;
+              }
+
+              context.putImageData(imgData, 0, 0);
+              const pngURL = drawingCanvas.toDataURL("image/png");
+              return dataURItoBlob(pngURL);
+            }
+          }
+        }
+      });
+    },
+    exportImage() {
+      const canvas = document.createElement("canvas");
+      const context = canvas.getContext("2d");
+      const foreground = new Image();
+
+      canvas.width = output.width;
+      canvas.height = output.height;
+
+      return new Promise((resolve) => {
+        if (stage === null) return;
+        foreground.onload = resolve;
+        const copyStage = stage.clone();
+        const copyDrawLayer = copyStage.findOne("#drawLayer");
+        copyDrawLayer.hide();
+        foreground.src = copyStage.toDataURL({ pixelRatio: 2 });
+      }).then(() => {
+        if (context !== null) {
+          context.drawImage(foreground, 0, 0, output.width, output.height);
+          return dataURItoBlob(canvas.toDataURL("image/png"));
+        }
+      });
+    },
   };
 })();
 
-export default imagePrompt;
+export default inpainter;

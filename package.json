@@ -1,7 +1,7 @@
 {
-  "name": "image-prompt",
-  "version": "0.0.14",
-  "description": "masking images with brush and eraser tool",
+  "name": "inpainter",
+  "version": "0.0.0",
+  "description": "masking image with brush and eraser tool",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "type": "module",
@@ -11,7 +11,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/0715yk/fabric-image-maker.git"
+    "url": "git+https://github.com/0715yk/inpainter.git"
   },
   "author": "bravehong",
   "license": "ISC",
