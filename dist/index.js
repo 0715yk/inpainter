@@ -19,32 +19,27 @@ const inpainter = (function () {
     let drawLayer = null;
     let imageLayer = null;
     let currentLine = null;
+    let drawRect = null;
     const eventListener = new EventListeners();
     return {
         goTo(index) {
-            if (drawLayer !== null) {
-                history = history.filter((line, _) => {
-                    if (_ >= index) {
-                        line === null || line === void 0 ? void 0 : line.remove();
-                        return false;
-                    }
-                    else {
-                        if (drawLayer !== null) {
-                            drawLayer.add(line);
-                            return true;
-                        }
-                        else {
-                            return false;
-                        }
-                    }
-                });
-                drawLayer.batchDraw();
-                historyStep = index;
-                eventListener.dispatch("change", {
-                    cnt: historyStep,
-                    stage: stage === null || stage === void 0 ? void 0 : stage.toJSON(),
-                });
-            }
+            if (drawLayer === null)
+                return;
+            history = history.filter((line, _) => {
+                if (_ >= index) {
+                    line === null || line === void 0 ? void 0 : line.remove();
+                    return false;
+                }
+                else {
+                    return true;
+                }
+            });
+            drawLayer.batchDraw();
+            historyStep = index;
+            eventListener.dispatch("change", {
+                cnt: historyStep,
+                stage: stage === null || stage === void 0 ? void 0 : stage.toJSON(),
+            });
         },
         undo() {
             if (historyStep === 0) {
@@ -66,8 +61,14 @@ const inpainter = (function () {
                 return;
             }
             const lineToRedraw = history[historyStep];
-            if (lineToRedraw !== undefined && drawLayer !== null) {
+            if (lineToRedraw !== undefined &&
+                drawLayer !== null &&
+                drawRect !== null) {
                 drawLayer.add(lineToRedraw);
+                const ifDrawRectExist = drawLayer.findOne("#drawRect");
+                if (ifDrawRectExist)
+                    drawRect.remove();
+                drawLayer.add(drawRect);
                 historyStep++;
                 drawLayer.batchDraw();
                 eventListener.dispatch("change", {
@@ -76,13 +77,15 @@ const inpainter = (function () {
                 });
             }
         },
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         on(eventType, eventCallback) {
             eventListener.addEventListener(eventType, eventCallback);
         },
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         off(eventType, eventCallback) {
             eventListener.removeEventListener(eventType, eventCallback);
         },
-        init: function ({ container, brushOption, width, height, on, cache, }) {
+        init: function ({ container, brushOption, width, height, on, cache, patternSrc, }) {
             var _a;
             if (cache) {
                 stage = Konva.Node.create(cache, container);
@@ -103,21 +106,34 @@ const inpainter = (function () {
                 drawLayer = new Konva.Layer({
                     id: "drawLayer",
                 });
+                stage.add(imageLayer);
+                stage.add(drawLayer);
             }
-            stage.add(imageLayer);
-            stage.add(drawLayer);
             let isPaint = false;
             if (brushOption) {
                 brushOptions.color = brushOption.color;
                 brushOptions.strokeWidth = brushOption.strokeWidth;
             }
+            const img = new Image();
+            img.onload = () => {
+                drawRect = new Konva.Rect({
+                    fillPatternImage: img,
+                    id: "drawRect",
+                    fillPatternRepeat: "no-repeat",
+                    globalCompositeOperation: "source-in",
+                    fillPriority: "pattern",
+                });
+            };
+            img.src = patternSrc;
             stage.on("mousedown", () => {
                 if (!drawingModeOn)
                     return;
                 isPaint = true;
                 if (stage !== null) {
                     const pointerPosition = stage.getPointerPosition();
-                    if (drawLayer !== null && pointerPosition !== null) {
+                    if (drawLayer !== null &&
+                        pointerPosition !== null &&
+                        drawRect !== null) {
                         const x = (pointerPosition.x - drawLayer.x()) / scale;
                         const y = (pointerPosition.y - drawLayer.y()) / scale;
                         const minValue = 0.0001;
@@ -130,6 +146,10 @@ const inpainter = (function () {
                             points: [x, y, x + minValue, y + minValue],
                         });
                         drawLayer.add(currentLine);
+                        const ifDrawRectExist = drawLayer.findOne("#drawRect");
+                        if (ifDrawRectExist)
+                            drawRect.remove();
+                        drawLayer.add(drawRect);
                     }
                 }
             });
@@ -256,16 +276,16 @@ const inpainter = (function () {
                 drawLayer.position({ x, y });
                 drawLayer.scale({ x: scale, y: scale });
                 drawLayer.moveToTop();
+                if (drawRect !== null) {
+                    drawRect.x(-(drawLayer.x() / scale));
+                    drawRect.y(-(drawLayer.y() / scale));
+                    drawRect.fillPatternScaleX(1 / scale);
+                    drawRect.fillPatternScaleY(1 / scale);
+                    drawRect.width(drawLayer.width() * (1 / scale));
+                    drawRect.height(drawLayer.height() * (1 / scale));
+                }
             };
             imageElement.src = src;
-        },
-        setStrokeColor(color) {
-            brushOptions.color = color;
-            if (!drawingModeOn || drawingMode === "eraser")
-                return;
-            if (stage !== null && brushOptions.strokeWidth !== null) {
-                stage.container().style.cursor = getDrawCursor(brushOptions.strokeWidth, color, drawingMode === "brush" ? color : undefined);
-            }
         },
         setStrokeWidth(width) {
             if (typeof width === "string") {
@@ -317,13 +337,6 @@ const inpainter = (function () {
                 historyStep = 0;
             }
         },
-        destroyStage() {
-            if (stage !== null) {
-                stage.destroyChildren();
-                stage.destroy();
-                stage = null;
-            }
-        },
         exportMask() {
             const canvas = document.createElement("canvas");
             const context = canvas.getContext("2d");
@@ -338,6 +351,8 @@ const inpainter = (function () {
                     const copyImageLayer = copyStage.findOne("#imageLayer");
                     copyImageLayer.hide();
                     const copyDrawLayer = copyStage.findOne("#drawLayer");
+                    const drawRect = copyDrawLayer.findOne("#drawRect");
+                    drawRect.destroy();
                     copyDrawLayer.show();
                     foreground.src = copyStage.toDataURL({ pixelRatio: 2 });
                 }

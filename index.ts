@@ -27,33 +27,26 @@ const inpainter = (function () {
   let drawLayer = null as null | Konva.Layer;
   let imageLayer = null as null | Konva.Layer;
   let currentLine: Konva.Line | null = null;
-
+  let drawRect: Konva.Rect | null = null;
   const eventListener = new EventListeners();
 
   return {
     goTo(index: number) {
-      if (drawLayer !== null) {
-        history = history.filter((line, _) => {
-          if (_ >= index) {
-            line?.remove();
-            return false;
-          } else {
-            if (drawLayer !== null) {
-              drawLayer.add(line);
-              return true;
-            } else {
-              return false;
-            }
-          }
-        });
-
-        drawLayer.batchDraw();
-        historyStep = index;
-        eventListener.dispatch("change", {
-          cnt: historyStep,
-          stage: stage?.toJSON(),
-        });
-      }
+      if (drawLayer === null) return;
+      history = history.filter((line, _) => {
+        if (_ >= index) {
+          line?.remove();
+          return false;
+        } else {
+          return true;
+        }
+      });
+      drawLayer.batchDraw();
+      historyStep = index;
+      eventListener.dispatch("change", {
+        cnt: historyStep,
+        stage: stage?.toJSON(),
+      });
     },
     undo() {
       if (historyStep === 0) {
@@ -76,8 +69,16 @@ const inpainter = (function () {
       }
 
       const lineToRedraw = history[historyStep];
-      if (lineToRedraw !== undefined && drawLayer !== null) {
+      if (
+        lineToRedraw !== undefined &&
+        drawLayer !== null &&
+        drawRect !== null
+      ) {
         drawLayer.add(lineToRedraw);
+        const ifDrawRectExist = drawLayer.findOne("#drawRect");
+        if (ifDrawRectExist) drawRect.remove();
+
+        drawLayer.add(drawRect);
         historyStep++;
         drawLayer.batchDraw();
         eventListener.dispatch("change", {
@@ -86,11 +87,11 @@ const inpainter = (function () {
         });
       }
     },
-
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     on(eventType: string, eventCallback: (...args: any) => void) {
       eventListener.addEventListener(eventType, eventCallback);
     },
-
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     off(eventType: string, eventCallback: (...args: any) => void) {
       eventListener.removeEventListener(eventType, eventCallback);
     },
@@ -101,20 +102,24 @@ const inpainter = (function () {
       height,
       on,
       cache,
+      patternSrc,
     }: {
       container: string | HTMLDivElement;
       brushOption?: { strokeWidth: number; color: string };
       width?: number;
       height?: number;
       on?: {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         [eventType: string]: (arg: any) => void;
       };
       cache?: string;
+      patternSrc: string;
     }) {
       if (cache) {
         stage = Konva.Node.create(cache, container) as Konva.Stage;
         const iLayer = stage.findOne("#imageLayer") as Konva.Layer;
         const dLayer = stage.findOne("#drawLayer") as Konva.Layer;
+
         imageLayer = iLayer;
         drawLayer = dLayer;
       } else {
@@ -130,10 +135,9 @@ const inpainter = (function () {
         drawLayer = new Konva.Layer({
           id: "drawLayer",
         });
+        stage.add(imageLayer);
+        stage.add(drawLayer);
       }
-
-      stage.add(imageLayer);
-      stage.add(drawLayer);
 
       let isPaint = false;
 
@@ -142,16 +146,34 @@ const inpainter = (function () {
         brushOptions.strokeWidth = brushOption.strokeWidth;
       }
 
+      const img = new Image();
+
+      img.onload = () => {
+        drawRect = new Konva.Rect({
+          fillPatternImage: img,
+          id: "drawRect",
+          fillPatternRepeat: "no-repeat",
+          globalCompositeOperation: "source-in",
+          fillPriority: "pattern",
+        });
+      };
+      img.src = patternSrc;
+
       stage.on("mousedown", () => {
         if (!drawingModeOn) return;
         isPaint = true;
 
         if (stage !== null) {
           const pointerPosition = stage.getPointerPosition();
-          if (drawLayer !== null && pointerPosition !== null) {
+          if (
+            drawLayer !== null &&
+            pointerPosition !== null &&
+            drawRect !== null
+          ) {
             const x = (pointerPosition.x - drawLayer.x()) / scale;
             const y = (pointerPosition.y - drawLayer.y()) / scale;
             const minValue = 0.0001;
+
             currentLine = new Konva.Line({
               stroke: brushOptions?.color,
               strokeWidth: brushOptions?.strokeWidth / scale,
@@ -161,8 +183,12 @@ const inpainter = (function () {
               lineJoin: "round",
               points: [x, y, x + minValue, y + minValue],
             });
-
             drawLayer.add(currentLine);
+
+            const ifDrawRectExist = drawLayer.findOne("#drawRect");
+            if (ifDrawRectExist) drawRect.remove();
+
+            drawLayer.add(drawRect);
           }
         }
       });
@@ -177,6 +203,7 @@ const inpainter = (function () {
           if (drawLayer !== null && pointerPosition !== null) {
             const x = (pointerPosition.x - drawLayer.x()) / scale;
             const y = (pointerPosition.y - drawLayer.y()) / scale;
+
             if (currentLine !== null) {
               currentLine.points(currentLine.points().concat([x, y]));
             }
@@ -296,6 +323,7 @@ const inpainter = (function () {
         imageLayer.add(
           new Konva.Image({ image: imageElement, width, height, x, y })
         );
+
         const copyDiv = document.createElement("div");
         copyDiv.id = "app";
         document.body.appendChild(copyDiv);
@@ -316,23 +344,21 @@ const inpainter = (function () {
 
         copyDiv.remove();
         copyStage.remove();
+
         drawLayer.position({ x, y });
         drawLayer.scale({ x: scale, y: scale });
         drawLayer.moveToTop();
+        if (drawRect !== null) {
+          drawRect.x(-(drawLayer.x() / scale));
+          drawRect.y(-(drawLayer.y() / scale));
+          drawRect.fillPatternScaleX(1 / scale);
+          drawRect.fillPatternScaleY(1 / scale);
+          drawRect.width(drawLayer.width() * (1 / scale));
+          drawRect.height(drawLayer.height() * (1 / scale));
+        }
       };
 
       imageElement.src = src;
-    },
-    setStrokeColor(color: string) {
-      brushOptions.color = color;
-      if (!drawingModeOn || drawingMode === "eraser") return;
-      if (stage !== null && brushOptions.strokeWidth !== null) {
-        stage.container().style.cursor = getDrawCursor(
-          brushOptions.strokeWidth,
-          color,
-          drawingMode === "brush" ? color : undefined
-        );
-      }
     },
     setStrokeWidth(width: number | string) {
       if (typeof width === "string") {
@@ -391,13 +417,6 @@ const inpainter = (function () {
         historyStep = 0;
       }
     },
-    destroyStage() {
-      if (stage !== null) {
-        stage.destroyChildren();
-        stage.destroy();
-        stage = null;
-      }
-    },
     exportMask() {
       const canvas = document.createElement("canvas");
       const context = canvas.getContext("2d");
@@ -414,6 +433,9 @@ const inpainter = (function () {
           const copyImageLayer = copyStage.findOne("#imageLayer");
           copyImageLayer.hide();
           const copyDrawLayer = copyStage.findOne("#drawLayer");
+
+          const drawRect = copyDrawLayer.findOne("#drawRect");
+          drawRect.destroy();
           copyDrawLayer.show();
           foreground.src = copyStage.toDataURL({ pixelRatio: 2 });
         }
@@ -467,6 +489,7 @@ const inpainter = (function () {
       return new Promise((resolve) => {
         if (stage === null) return;
         foreground.onload = resolve;
+
         const copyStage = stage.clone();
         const copyDrawLayer = copyStage.findOne("#drawLayer");
         copyDrawLayer.hide();

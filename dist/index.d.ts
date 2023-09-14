@@ -4,7 +4,7 @@ declare const inpainter: {
     redo(): void;
     on(eventType: string, eventCallback: (...args: any) => void): void;
     off(eventType: string, eventCallback: (...args: any) => void): void;
-    init: ({ container, brushOption, width, height, on, cache, }: {
+    init: ({ container, brushOption, width, height, on, cache, patternSrc, }: {
         container: string | HTMLDivElement;
         brushOption?: {
             strokeWidth: number;
@@ -16,6 +16,7 @@ declare const inpainter: {
             [eventType: string]: (arg: any) => void;
         } | undefined;
         cache?: string | undefined;
+        patternSrc: string;
     }) => void;
     importImage({ src, containerWidth, containerHeight, selectedWidth, selectedHeight, }: {
         src: string;
@@ -24,11 +25,9 @@ declare const inpainter: {
         selectedWidth: number;
         selectedHeight: number;
     }): void;
-    setStrokeColor(color: string): void;
     setStrokeWidth(width: number | string): void;
     setDrawingMode(mode: "brush" | "eraser" | "on" | "off"): void;
     deleteImage(): void;
-    destroyStage(): void;
     exportMask(): Promise<Blob | undefined>;
     exportImage(): Promise<Blob | undefined>;
 };
