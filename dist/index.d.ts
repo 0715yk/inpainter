@@ -8,7 +8,6 @@ declare const inpainter: {
         container: string | HTMLDivElement;
         brushOption?: {
             strokeWidth: number;
-            color: string;
         } | undefined;
         width?: number | undefined;
         height?: number | undefined;

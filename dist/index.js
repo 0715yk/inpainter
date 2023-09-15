@@ -10,7 +10,6 @@ const inpainter = (function () {
     let historyStep = 0;
     const brushOptions = {
         strokeWidth: 30,
-        color: "#ffffff",
     };
     let drawingModeOn = false;
     let drawingMode = "brush";
@@ -111,7 +110,6 @@ const inpainter = (function () {
             }
             let isPaint = false;
             if (brushOption) {
-                brushOptions.color = brushOption.color;
                 brushOptions.strokeWidth = brushOption.strokeWidth;
             }
             const img = new Image();
@@ -138,7 +136,7 @@ const inpainter = (function () {
                         const y = (pointerPosition.y - drawLayer.y()) / scale;
                         const minValue = 0.0001;
                         currentLine = new Konva.Line({
-                            stroke: brushOptions === null || brushOptions === void 0 ? void 0 : brushOptions.color,
+                            stroke: "#FFFFFF",
                             strokeWidth: (brushOptions === null || brushOptions === void 0 ? void 0 : brushOptions.strokeWidth) / scale,
                             globalCompositeOperation: drawingMode === "brush" ? "source-over" : "destination-out",
                             lineCap: "round",
@@ -296,8 +294,8 @@ const inpainter = (function () {
             }
             if (!drawingModeOn)
                 return;
-            if (stage !== null && brushOptions.color !== null) {
-                stage.container().style.cursor = getDrawCursor(brushOptions.strokeWidth, drawingMode === "eraser" ? "none" : brushOptions.color, drawingMode === "brush" ? brushOptions.color : undefined);
+            if (stage !== null) {
+                stage.container().style.cursor = getDrawCursor(brushOptions.strokeWidth);
             }
         },
         setDrawingMode(mode) {
@@ -316,14 +314,14 @@ const inpainter = (function () {
                     drawingModeOn = true;
                     drawLayer.show();
                     if (stage !== null) {
-                        stage.container().style.cursor = getDrawCursor(brushOptions.strokeWidth, "none");
+                        stage.container().style.cursor = getDrawCursor(brushOptions.strokeWidth);
                     }
                 }
                 else if (mode === "brush") {
                     drawingModeOn = true;
                     drawLayer.show();
                     if (stage !== null) {
-                        stage.container().style.cursor = getDrawCursor(brushOptions.strokeWidth, brushOptions.color, brushOptions.color);
+                        stage.container().style.cursor = getDrawCursor(brushOptions.strokeWidth);
                     }
                 }
                 drawingMode = mode;
