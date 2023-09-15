@@ -81,8 +81,9 @@ const inpainter = (function () {
 
         const ifDrawRectExist = drawLayer.findOne("#drawRect");
         if (ifDrawRectExist) {
-          ifDrawRectExist.remove();
-          drawLayer.add(drawRect);
+          const cloned = ifDrawRectExist.clone();
+          drawLayer.add(cloned);
+          ifDrawRectExist.destroy();
         }
 
         historyStep++;
@@ -204,8 +205,9 @@ const inpainter = (function () {
 
             const ifDrawRectExist = drawLayer.findOne("#drawRect");
             if (ifDrawRectExist) {
-              ifDrawRectExist.remove();
-              drawLayer.add(drawRect);
+              const cloned = ifDrawRectExist.clone();
+              drawLayer.add(cloned);
+              ifDrawRectExist.destroy();
             }
           }
         }
