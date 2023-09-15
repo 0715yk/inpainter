@@ -19,6 +19,7 @@ const inpainter = (function () {
     let imageLayer = null;
     let currentLine = null;
     let drawRect = null;
+    let patternSource = null;
     const containerSizeOption = { width: null, height: null };
     const eventListener = new EventListeners();
     return {
@@ -57,13 +58,11 @@ const inpainter = (function () {
             }
         },
         redo() {
-            if (historyStep === history.length) {
+            if (historyStep === history.length || drawRect === null) {
                 return;
             }
             const lineToRedraw = history[historyStep];
-            if (lineToRedraw !== undefined &&
-                drawLayer !== null &&
-                drawRect !== null) {
+            if (lineToRedraw !== undefined && drawLayer !== null) {
                 drawLayer.add(lineToRedraw);
                 const ifDrawRectExist = drawLayer.findOne("#drawRect");
                 if (ifDrawRectExist)
@@ -87,6 +86,7 @@ const inpainter = (function () {
         },
         init: function ({ container, brushOption, width, height, on, cache, patternSrc, containerSize, }) {
             var _a;
+            patternSource = patternSrc;
             if (cache) {
                 stage = Konva.Node.create(cache, container);
                 const iLayer = stage.findOne("#imageLayer");
@@ -115,26 +115,36 @@ const inpainter = (function () {
             }
             containerSizeOption.width = containerSize.width;
             containerSizeOption.height = containerSize.height;
+            const ifDrawRectExist = drawLayer.findOne("#drawRect");
+            if (ifDrawRectExist)
+                ifDrawRectExist.destroy();
             const img = new Image();
             img.onload = () => {
+                if (drawLayer === null)
+                    return;
                 drawRect = new Konva.Rect({
                     fillPatternImage: img,
                     id: "drawRect",
                     fillPatternRepeat: "no-repeat",
                     globalCompositeOperation: "source-in",
                     fillPriority: "pattern",
+                    x: -(drawLayer.x() / scale),
+                    y: -(drawLayer.y() / scale),
+                    fillPatternScaleX: 1 / scale,
+                    fillPatternScaleY: 1 / scale,
+                    width: drawLayer.width() * (1 / scale),
+                    height: drawLayer.height() * (1 / scale),
                 });
+                drawLayer.add(drawRect);
             };
             img.src = patternSrc;
             stage.on("mousedown", () => {
                 if (!drawingModeOn)
                     return;
                 isPaint = true;
-                if (stage !== null) {
+                if (stage !== null && drawRect !== null) {
                     const pointerPosition = stage.getPointerPosition();
-                    if (drawLayer !== null &&
-                        pointerPosition !== null &&
-                        drawRect !== null) {
+                    if (drawLayer !== null && pointerPosition !== null) {
                         const x = (pointerPosition.x - drawLayer.x()) / scale;
                         const y = (pointerPosition.y - drawLayer.y()) / scale;
                         const minValue = 0.0001;
@@ -193,7 +203,7 @@ const inpainter = (function () {
                 });
             }
             if (container instanceof HTMLDivElement) {
-                const divElement = container === null || container === void 0 ? void 0 : container.firstChild;
+                const divElement = container.firstChild;
                 divElement === null || divElement === void 0 ? void 0 : divElement.addEventListener("mouseleave", function () {
                     if (!isPaint)
                         return;
@@ -232,10 +242,10 @@ const inpainter = (function () {
             }
         },
         importImage({ src, selectedWidth, selectedHeight, }) {
+            const imageElement = new Image();
             const { width: containerWidth, height: containerHeight } = containerSizeOption;
             if (containerWidth === null || containerHeight === null)
                 return;
-            const imageElement = new Image();
             imageElement.onload = () => {
                 if (stage === null || imageLayer === null || drawLayer === null)
                     return;
@@ -280,14 +290,31 @@ const inpainter = (function () {
                 drawLayer.position({ x, y });
                 drawLayer.scale({ x: scale, y: scale });
                 drawLayer.moveToTop();
-                if (drawRect !== null) {
-                    drawRect.x(-(drawLayer.x() / scale));
-                    drawRect.y(-(drawLayer.y() / scale));
-                    drawRect.fillPatternScaleX(1 / scale);
-                    drawRect.fillPatternScaleY(1 / scale);
-                    drawRect.width(drawLayer.width() * (1 / scale));
-                    drawRect.height(drawLayer.height() * (1 / scale));
-                }
+                if (patternSource === null)
+                    return;
+                const img = new Image();
+                img.onload = () => {
+                    if (drawLayer === null || drawRect === null)
+                        return;
+                    const ifDrawRectExist = drawLayer.findOne("#drawRect");
+                    if (ifDrawRectExist)
+                        drawRect.remove();
+                    drawRect = new Konva.Rect({
+                        fillPatternImage: img,
+                        id: "drawRect",
+                        fillPatternRepeat: "no-repeat",
+                        globalCompositeOperation: "source-in",
+                        fillPriority: "pattern",
+                        x: -(drawLayer.x() / scale),
+                        y: -(drawLayer.y() / scale),
+                        fillPatternScaleX: 1 / scale,
+                        fillPatternScaleY: 1 / scale,
+                        width: drawLayer.width() * (1 / scale),
+                        height: drawLayer.height() * (1 / scale),
+                    });
+                    drawLayer.add(drawRect);
+                };
+                img.src = patternSource;
             };
             imageElement.src = src;
         },
@@ -409,6 +436,40 @@ const inpainter = (function () {
                     context.drawImage(foreground, 0, 0, output.width, output.height);
                     return dataURItoBlob(canvas.toDataURL("image/png"));
                 }
+            });
+        },
+        getCenterCroppedImage({ src, selectedWidth, selectedHeight, }) {
+            const imageElement = new Image();
+            const { width: containerWidth, height: containerHeight } = containerSizeOption;
+            return new Promise((resolve) => {
+                imageElement.onload = resolve;
+                imageElement.src = src;
+            }).then(() => {
+                if (stage === null ||
+                    containerWidth === null ||
+                    containerHeight === null) {
+                    return;
+                }
+                const { width: stageW, height: stageH } = getContainSize(containerWidth, containerHeight, selectedWidth, selectedHeight);
+                stage.width(stageW);
+                stage.height(stageH);
+                const { width: imageW, height: imageH } = imageElement;
+                const stageRatio = stageW / stageH;
+                const imageRatio = imageW / imageH;
+                let width = stageW;
+                let height = stageH;
+                let x = 0;
+                let y = 0;
+                if (stageRatio < imageRatio) {
+                    width = stageH * imageRatio;
+                    x = (stageW - width) / 2;
+                }
+                else if (stageRatio > imageRatio) {
+                    height = stageW / imageRatio;
+                    y = (stageH - height) / 2;
+                }
+                scale = stageRatio < imageRatio ? stageH / imageH : stageW / imageW;
+                return new Konva.Image({ image: imageElement, width, height, x, y });
             });
         },
     };

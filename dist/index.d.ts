@@ -31,5 +31,10 @@ declare const inpainter: {
     deleteImage(): void;
     exportMask(): Promise<Blob | undefined>;
     exportImage(): Promise<Blob | undefined>;
+    getCenterCroppedImage({ src, selectedWidth, selectedHeight, }: {
+        src: string;
+        selectedWidth: number;
+        selectedHeight: number;
+    }): Promise<import("konva/lib/shapes/Image").Image | undefined>;
 };
 export default inpainter;
