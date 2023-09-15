@@ -98,6 +98,7 @@ const inpainter = (function () {
       eventListener.removeEventListener(eventType, eventCallback);
     },
     updateRect() {
+      console.log("hello");
       if (patternSource === null || drawLayer === null) return;
       const ifDrawRectExist = drawLayer.findOne("#drawRect");
       if (ifDrawRectExist) ifDrawRectExist.destroy();
