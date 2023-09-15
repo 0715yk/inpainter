@@ -4,7 +4,7 @@ declare const inpainter: {
     redo(): void;
     on(eventType: string, eventCallback: (...args: any) => void): void;
     off(eventType: string, eventCallback: (...args: any) => void): void;
-    init: ({ container, brushOption, width, height, on, cache, patternSrc, }: {
+    init: ({ container, brushOption, width, height, on, cache, patternSrc, containerSize, }: {
         container: string | HTMLDivElement;
         brushOption?: {
             strokeWidth: number;
@@ -16,11 +16,13 @@ declare const inpainter: {
         } | undefined;
         cache?: string | undefined;
         patternSrc: string;
+        containerSize: {
+            width: null | number;
+            height: null | number;
+        };
     }) => void;
-    importImage({ src, containerWidth, containerHeight, selectedWidth, selectedHeight, }: {
+    importImage({ src, selectedWidth, selectedHeight, }: {
         src: string;
-        containerWidth: number;
-        containerHeight: number;
         selectedWidth: number;
         selectedHeight: number;
     }): void;

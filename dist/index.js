@@ -19,6 +19,7 @@ const inpainter = (function () {
     let imageLayer = null;
     let currentLine = null;
     let drawRect = null;
+    const containerSizeOption = { width: null, height: null };
     const eventListener = new EventListeners();
     return {
         goTo(index) {
@@ -84,7 +85,7 @@ const inpainter = (function () {
         off(eventType, eventCallback) {
             eventListener.removeEventListener(eventType, eventCallback);
         },
-        init: function ({ container, brushOption, width, height, on, cache, patternSrc, }) {
+        init: function ({ container, brushOption, width, height, on, cache, patternSrc, containerSize, }) {
             var _a;
             if (cache) {
                 stage = Konva.Node.create(cache, container);
@@ -112,6 +113,8 @@ const inpainter = (function () {
             if (brushOption) {
                 brushOptions.strokeWidth = brushOption.strokeWidth;
             }
+            containerSizeOption.width = containerSize.width;
+            containerSizeOption.height = containerSize.height;
             const img = new Image();
             img.onload = () => {
                 drawRect = new Konva.Rect({
@@ -228,7 +231,10 @@ const inpainter = (function () {
                 });
             }
         },
-        importImage({ src, containerWidth, containerHeight, selectedWidth, selectedHeight, }) {
+        importImage({ src, selectedWidth, selectedHeight, }) {
+            const { width: containerWidth, height: containerHeight } = containerSizeOption;
+            if (containerWidth === null || containerHeight === null)
+                return;
             const imageElement = new Image();
             imageElement.onload = () => {
                 if (stage === null || imageLayer === null || drawLayer === null)

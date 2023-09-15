@@ -17,7 +17,7 @@ const inpainter = (function () {
 
   const brushOptions = {
     strokeWidth: 30,
-  } as { strokeWidth: number; color: string };
+  } as { strokeWidth: number };
 
   let drawingModeOn = false;
   let drawingMode: "brush" | "eraser" | "on" | "off" = "brush";
@@ -27,6 +27,10 @@ const inpainter = (function () {
   let imageLayer = null as null | Konva.Layer;
   let currentLine: Konva.Line | null = null;
   let drawRect: Konva.Rect | null = null;
+  const containerSizeOption: {
+    width: null | number;
+    height: null | number;
+  } = { width: null, height: null };
   const eventListener = new EventListeners();
 
   return {
@@ -102,6 +106,7 @@ const inpainter = (function () {
       on,
       cache,
       patternSrc,
+      containerSize,
     }: {
       container: string | HTMLDivElement;
       brushOption?: { strokeWidth: number };
@@ -113,6 +118,10 @@ const inpainter = (function () {
       };
       cache?: string;
       patternSrc: string;
+      containerSize: {
+        width: null | number;
+        height: null | number;
+      };
     }) {
       if (cache) {
         stage = Konva.Node.create(cache, container) as Konva.Stage;
@@ -143,6 +152,9 @@ const inpainter = (function () {
       if (brushOption) {
         brushOptions.strokeWidth = brushOption.strokeWidth;
       }
+
+      containerSizeOption.width = containerSize.width;
+      containerSizeOption.height = containerSize.height;
 
       const img = new Image();
 
@@ -272,17 +284,17 @@ const inpainter = (function () {
     },
     importImage({
       src,
-      containerWidth,
-      containerHeight,
       selectedWidth,
       selectedHeight,
     }: {
       src: string;
-      containerWidth: number;
-      containerHeight: number;
       selectedWidth: number;
       selectedHeight: number;
     }) {
+      const { width: containerWidth, height: containerHeight } =
+        containerSizeOption;
+      if (containerWidth === null || containerHeight === null) return;
+
       const imageElement = new Image();
 
       imageElement.onload = () => {
