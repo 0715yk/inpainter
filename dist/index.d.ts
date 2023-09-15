@@ -4,7 +4,6 @@ declare const inpainter: {
     redo(): void;
     on(eventType: string, eventCallback: (...args: any) => void): void;
     off(eventType: string, eventCallback: (...args: any) => void): void;
-    updateRect(): void;
     init: ({ container, brushOption, width, height, on, cache, patternSrc, containerSize, }: {
         container: string | HTMLDivElement;
         brushOption?: {

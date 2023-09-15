@@ -83,21 +83,6 @@ const inpainter = (function () {
         off(eventType, eventCallback) {
             eventListener.removeEventListener(eventType, eventCallback);
         },
-        updateRect() {
-            if (patternSource === null || drawLayer === null)
-                return;
-            const ifDrawRectExist = drawLayer.findOne("#drawRect");
-            if (ifDrawRectExist) {
-                drawRect = ifDrawRectExist.clone();
-                ifDrawRectExist.remove();
-                drawRect.x(-(drawLayer.x() / scale));
-                drawRect.y(-(drawLayer.y() / scale));
-                drawRect.fillPatternScaleX(1 / scale);
-                drawRect.fillPatternScaleY(1 / scale);
-                drawRect.width(drawLayer.width() * (1 / scale));
-                drawRect.height(drawLayer.height() * (1 / scale));
-            }
-        },
         init: function ({ container, brushOption, width, height, on, cache, patternSrc, containerSize, }) {
             var _a;
             patternSource = patternSrc;
@@ -109,10 +94,6 @@ const inpainter = (function () {
                 imageLayer = iLayer;
                 drawLayer = dLayer;
                 drawRect = dRect;
-                if (dRect) {
-                    dRect.remove();
-                    drawLayer.add(drawRect);
-                }
             }
             else {
                 stage = new Konva.Stage({
@@ -155,9 +136,9 @@ const inpainter = (function () {
                         });
                         drawLayer.add(currentLine);
                         const ifDrawRectExist = drawLayer.findOne("#drawRect");
-                        if (ifDrawRectExist) {
-                            drawLayer.add(ifDrawRectExist);
-                        }
+                        if (ifDrawRectExist)
+                            drawRect.remove();
+                        drawLayer.add(drawRect);
                     }
                 }
             });
@@ -260,7 +241,10 @@ const inpainter = (function () {
             if (containerWidth === null || containerHeight === null)
                 return;
             imageElement.onload = () => {
-                if (stage === null || imageLayer === null || drawLayer === null)
+                if (stage === null ||
+                    imageLayer === null ||
+                    drawLayer === null ||
+                    drawRect === null)
                     return;
                 const { width: stageW, height: stageH } = getContainSize(containerWidth, containerHeight, selectedWidth, selectedHeight);
                 stage.width(stageW);
@@ -305,7 +289,12 @@ const inpainter = (function () {
                 drawLayer.moveToTop();
                 if (patternSource === null)
                     return;
-                this.updateRect();
+                drawRect.x(-(drawLayer.x() / scale));
+                drawRect.y(-(drawLayer.y() / scale));
+                drawRect.fillPatternScaleX(1 / scale);
+                drawRect.fillPatternScaleY(1 / scale);
+                drawRect.width(drawLayer.width() * (1 / scale));
+                drawRect.height(drawLayer.height() * (1 / scale));
             };
             imageElement.src = src;
         },
