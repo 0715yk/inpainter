@@ -1,6 +1,6 @@
 {
   "name": "inpainter",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "description": "masking image with brush and eraser tool",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
