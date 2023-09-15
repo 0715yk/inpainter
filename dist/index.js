@@ -19,7 +19,6 @@ const inpainter = (function () {
     let imageLayer = null;
     let currentLine = null;
     let drawRect = null;
-    let patternSource = null;
     const containerSizeOption = { width: null, height: null };
     const eventListener = new EventListeners();
     return {
@@ -65,9 +64,9 @@ const inpainter = (function () {
             if (lineToRedraw !== undefined && drawLayer !== null) {
                 drawLayer.add(lineToRedraw);
                 const ifDrawRectExist = drawLayer.findOne("#drawRect");
-                if (ifDrawRectExist) {
-                    drawLayer.add(ifDrawRectExist);
-                }
+                if (ifDrawRectExist)
+                    drawRect.remove();
+                drawLayer.add(drawRect);
                 historyStep++;
                 eventListener.dispatch("change", {
                     cnt: historyStep,
@@ -85,15 +84,12 @@ const inpainter = (function () {
         },
         init: function ({ container, brushOption, width, height, on, cache, patternSrc, containerSize, }) {
             var _a;
-            patternSource = patternSrc;
             if (cache) {
                 stage = Konva.Node.create(cache, container);
                 const iLayer = stage.findOne("#imageLayer");
                 const dLayer = stage.findOne("#drawLayer");
-                const dRect = dLayer.findOne("#drawRect");
                 imageLayer = iLayer;
                 drawLayer = dLayer;
-                drawRect = dRect;
             }
             else {
                 stage = new Konva.Stage({
@@ -232,6 +228,7 @@ const inpainter = (function () {
                     globalCompositeOperation: "source-in",
                     fillPriority: "pattern",
                 });
+                drawLayer.add(drawRect);
                 return true;
             });
         },
@@ -287,8 +284,6 @@ const inpainter = (function () {
                 drawLayer.position({ x, y });
                 drawLayer.scale({ x: scale, y: scale });
                 drawLayer.moveToTop();
-                if (patternSource === null)
-                    return;
                 drawRect.x(-(drawLayer.x() / scale));
                 drawRect.y(-(drawLayer.y() / scale));
                 drawRect.fillPatternScaleX(1 / scale);
@@ -363,8 +358,8 @@ const inpainter = (function () {
                     copyImageLayer.hide();
                     const copyDrawLayer = copyStage.findOne("#drawLayer");
                     const drawRect = copyDrawLayer.findOne("#drawRect");
-                    drawRect.destroy();
                     copyDrawLayer.show();
+                    drawRect.destroy();
                     foreground.src = copyStage.toDataURL({ pixelRatio: 2 });
                 }
             }).then(() => {

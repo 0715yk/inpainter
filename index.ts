@@ -27,7 +27,6 @@ const inpainter = (function () {
   let imageLayer = null as null | Konva.Layer;
   let currentLine: Konva.Line | null = null;
   let drawRect: Konva.Rect | null = null;
-  let patternSource: string | null = null;
 
   const containerSizeOption: {
     width: null | number;
@@ -79,10 +78,9 @@ const inpainter = (function () {
       if (lineToRedraw !== undefined && drawLayer !== null) {
         drawLayer.add(lineToRedraw);
 
-        const ifDrawRectExist = drawLayer.findOne("#drawRect") as Konva.Rect;
-        if (ifDrawRectExist) {
-          drawLayer.add(ifDrawRectExist);
-        }
+        const ifDrawRectExist = drawLayer.findOne("#drawRect");
+        if (ifDrawRectExist) drawRect.remove();
+        drawLayer.add(drawRect);
 
         historyStep++;
 
@@ -126,16 +124,13 @@ const inpainter = (function () {
         height: null | number;
       };
     }) {
-      patternSource = patternSrc;
-
       if (cache) {
         stage = Konva.Node.create(cache, container) as Konva.Stage;
         const iLayer = stage.findOne("#imageLayer") as Konva.Layer;
         const dLayer = stage.findOne("#drawLayer") as Konva.Layer;
-        const dRect = dLayer.findOne("#drawRect") as Konva.Rect;
+
         imageLayer = iLayer;
         drawLayer = dLayer;
-        drawRect = dRect;
       } else {
         stage = new Konva.Stage({
           container,
@@ -284,7 +279,7 @@ const inpainter = (function () {
           globalCompositeOperation: "source-in",
           fillPriority: "pattern",
         });
-
+        drawLayer.add(drawRect);
         return true;
       });
     },
@@ -300,6 +295,7 @@ const inpainter = (function () {
       const imageElement = new Image();
       const { width: containerWidth, height: containerHeight } =
         containerSizeOption;
+
       if (containerWidth === null || containerHeight === null) return;
 
       imageElement.onload = () => {
@@ -369,7 +365,6 @@ const inpainter = (function () {
         drawLayer.position({ x, y });
         drawLayer.scale({ x: scale, y: scale });
         drawLayer.moveToTop();
-        if (patternSource === null) return;
 
         drawRect.x(-(drawLayer.x() / scale));
         drawRect.y(-(drawLayer.y() / scale));
@@ -450,8 +445,9 @@ const inpainter = (function () {
           copyImageLayer.hide();
           const copyDrawLayer = copyStage.findOne("#drawLayer") as Konva.Layer;
           const drawRect = copyDrawLayer.findOne("#drawRect");
-          drawRect.destroy();
           copyDrawLayer.show();
+          drawRect.destroy();
+
           foreground.src = copyStage.toDataURL({ pixelRatio: 2 });
         }
       }).then(() => {
