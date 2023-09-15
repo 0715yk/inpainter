@@ -66,7 +66,6 @@ const inpainter = (function () {
                 drawLayer.add(lineToRedraw);
                 this.updateRect();
                 historyStep++;
-                drawLayer.batchDraw();
                 eventListener.dispatch("change", {
                     cnt: historyStep,
                     stage: stage === null || stage === void 0 ? void 0 : stage.toJSON(),
@@ -86,7 +85,7 @@ const inpainter = (function () {
                 return;
             const ifDrawRectExist = drawLayer.findOne("#drawRect");
             if (ifDrawRectExist)
-                ifDrawRectExist.remove();
+                ifDrawRectExist.destroy();
             const img = new Image();
             img.onload = () => {
                 if (drawLayer === null)
@@ -105,6 +104,7 @@ const inpainter = (function () {
                     height: drawLayer.height() * (1 / scale),
                 });
                 drawLayer.add(drawRect);
+                drawLayer.batchDraw();
             };
             img.src = patternSource;
         },
