@@ -10,7 +10,7 @@ export function getDrawCursor(strokeWidth) {
     cx="50%"
     cy="50%"
     r="${strokeWidth}" 
-    stroke=""black""
+    stroke="black"
     fill="none"
   />
 </svg>
