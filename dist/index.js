@@ -66,9 +66,7 @@ const inpainter = (function () {
                 drawLayer.add(lineToRedraw);
                 const ifDrawRectExist = drawLayer.findOne("#drawRect");
                 if (ifDrawRectExist) {
-                    const cloned = ifDrawRectExist.clone();
-                    drawLayer.add(cloned);
-                    ifDrawRectExist.destroy();
+                    drawLayer.add(ifDrawRectExist);
                 }
                 historyStep++;
                 eventListener.dispatch("change", {
@@ -158,9 +156,7 @@ const inpainter = (function () {
                         drawLayer.add(currentLine);
                         const ifDrawRectExist = drawLayer.findOne("#drawRect");
                         if (ifDrawRectExist) {
-                            const cloned = ifDrawRectExist.clone();
-                            drawLayer.add(cloned);
-                            ifDrawRectExist.destroy();
+                            drawLayer.add(ifDrawRectExist);
                         }
                     }
                 }

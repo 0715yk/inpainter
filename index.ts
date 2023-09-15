@@ -79,11 +79,9 @@ const inpainter = (function () {
       if (lineToRedraw !== undefined && drawLayer !== null) {
         drawLayer.add(lineToRedraw);
 
-        const ifDrawRectExist = drawLayer.findOne("#drawRect");
+        const ifDrawRectExist = drawLayer.findOne("#drawRect") as Konva.Rect;
         if (ifDrawRectExist) {
-          const cloned = ifDrawRectExist.clone();
-          drawLayer.add(cloned);
-          ifDrawRectExist.destroy();
+          drawLayer.add(ifDrawRectExist);
         }
 
         historyStep++;
@@ -203,11 +201,11 @@ const inpainter = (function () {
             });
             drawLayer.add(currentLine);
 
-            const ifDrawRectExist = drawLayer.findOne("#drawRect");
+            const ifDrawRectExist = drawLayer.findOne(
+              "#drawRect"
+            ) as Konva.Rect;
             if (ifDrawRectExist) {
-              const cloned = ifDrawRectExist.clone();
-              drawLayer.add(cloned);
-              ifDrawRectExist.destroy();
+              drawLayer.add(ifDrawRectExist);
             }
           }
         }
