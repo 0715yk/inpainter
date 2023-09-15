@@ -21,7 +21,7 @@ declare const inpainter: {
             width: null | number;
             height: null | number;
         };
-    }) => void;
+    }) => Promise<true | undefined>;
     importImage({ src, selectedWidth, selectedHeight, }: {
         src: string;
         selectedWidth: number;

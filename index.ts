@@ -79,7 +79,11 @@ const inpainter = (function () {
       if (lineToRedraw !== undefined && drawLayer !== null) {
         drawLayer.add(lineToRedraw);
 
-        this.updateRect();
+        const ifDrawRectExist = drawLayer.findOne("#drawRect");
+        if (ifDrawRectExist) {
+          ifDrawRectExist.remove();
+          drawLayer.add(drawRect);
+        }
 
         historyStep++;
 
@@ -98,34 +102,18 @@ const inpainter = (function () {
       eventListener.removeEventListener(eventType, eventCallback);
     },
     updateRect() {
-      console.log("hello");
       if (patternSource === null || drawLayer === null) return;
       const ifDrawRectExist = drawLayer.findOne("#drawRect");
-      if (ifDrawRectExist) ifDrawRectExist.destroy();
-
-      const img = new Image();
-
-      img.onload = () => {
-        if (drawLayer === null) return;
-        drawRect = new Konva.Rect({
-          fillPatternImage: img,
-          id: "drawRect",
-          fillPatternRepeat: "no-repeat",
-          globalCompositeOperation: "source-in",
-          fillPriority: "pattern",
-          x: -(drawLayer.x() / scale),
-          y: -(drawLayer.y() / scale),
-          fillPatternScaleX: 1 / scale,
-          fillPatternScaleY: 1 / scale,
-          width: drawLayer.width() * (1 / scale),
-          height: drawLayer.height() * (1 / scale),
-        });
-
-        drawLayer.add(drawRect);
-        drawLayer.batchDraw();
-      };
-
-      img.src = patternSource;
+      if (ifDrawRectExist) {
+        drawRect = ifDrawRectExist.clone() as Konva.Rect;
+        ifDrawRectExist.remove();
+        drawRect.x(-(drawLayer.x() / scale));
+        drawRect.y(-(drawLayer.y() / scale));
+        drawRect.fillPatternScaleX(1 / scale);
+        drawRect.fillPatternScaleY(1 / scale);
+        drawRect.width(drawLayer.width() * (1 / scale));
+        drawRect.height(drawLayer.height() * (1 / scale));
+      }
     },
     init: function ({
       container,
@@ -158,9 +146,14 @@ const inpainter = (function () {
         stage = Konva.Node.create(cache, container) as Konva.Stage;
         const iLayer = stage.findOne("#imageLayer") as Konva.Layer;
         const dLayer = stage.findOne("#drawLayer") as Konva.Layer;
-
+        const dRect = dLayer.findOne("#drawRect") as Konva.Rect;
         imageLayer = iLayer;
         drawLayer = dLayer;
+        drawRect = dRect;
+        if (dRect) {
+          dRect.remove();
+          drawLayer.add(drawRect);
+        }
       } else {
         stage = new Konva.Stage({
           container,
@@ -187,9 +180,6 @@ const inpainter = (function () {
       containerSizeOption.width = containerSize.width;
       containerSizeOption.height = containerSize.height;
 
-      const ifDrawRectExist = drawLayer.findOne("#drawRect") as Konva.Rect;
-      if (ifDrawRectExist) ifDrawRectExist.remove();
-
       stage.on("mousedown", () => {
         if (!drawingModeOn) return;
         isPaint = true;
@@ -212,7 +202,11 @@ const inpainter = (function () {
             });
             drawLayer.add(currentLine);
 
-            this.updateRect();
+            const ifDrawRectExist = drawLayer.findOne("#drawRect");
+            if (ifDrawRectExist) {
+              ifDrawRectExist.remove();
+              drawLayer.add(drawRect);
+            }
           }
         }
       });
@@ -295,6 +289,24 @@ const inpainter = (function () {
           }
         });
       }
+
+      const img = new Image();
+
+      return new Promise((resolve) => {
+        img.onload = resolve;
+        img.src = patternSrc;
+      }).then(() => {
+        if (drawLayer === null) return;
+        drawRect = new Konva.Rect({
+          fillPatternImage: img,
+          id: "drawRect",
+          fillPatternRepeat: "no-repeat",
+          globalCompositeOperation: "source-in",
+          fillPriority: "pattern",
+        });
+
+        return true;
+      });
     },
     importImage({
       src,
