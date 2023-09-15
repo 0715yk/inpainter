@@ -444,9 +444,12 @@ const inpainter = (function () {
           const copyImageLayer = copyStage.findOne("#imageLayer");
           copyImageLayer.hide();
           const copyDrawLayer = copyStage.findOne("#drawLayer") as Konva.Layer;
-          const drawRect = copyDrawLayer.findOne("#drawRect");
           copyDrawLayer.show();
-          drawRect.destroy();
+          copyDrawLayer.children?.forEach((el) => {
+            if (el.id() === "drawRect") {
+              el.destroy();
+            }
+          });
 
           foreground.src = copyStage.toDataURL({ pixelRatio: 2 });
         }

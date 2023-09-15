@@ -350,6 +350,7 @@ const inpainter = (function () {
             canvas.width = output.width;
             canvas.height = output.height;
             return new Promise((resolve) => {
+                var _a;
                 foreground.onload = resolve;
                 if (stage !== null) {
                     const copyStage = stage.clone();
@@ -357,9 +358,12 @@ const inpainter = (function () {
                     const copyImageLayer = copyStage.findOne("#imageLayer");
                     copyImageLayer.hide();
                     const copyDrawLayer = copyStage.findOne("#drawLayer");
-                    const drawRect = copyDrawLayer.findOne("#drawRect");
                     copyDrawLayer.show();
-                    drawRect.destroy();
+                    (_a = copyDrawLayer.children) === null || _a === void 0 ? void 0 : _a.forEach((el) => {
+                        if (el.id() === "drawRect") {
+                            el.destroy();
+                        }
+                    });
                     foreground.src = copyStage.toDataURL({ pixelRatio: 2 });
                 }
             }).then(() => {
