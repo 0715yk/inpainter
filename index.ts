@@ -79,7 +79,7 @@ const inpainter = (function () {
       if (lineToRedraw !== undefined && drawLayer !== null) {
         drawLayer.add(lineToRedraw);
         const ifDrawRectExist = drawLayer.findOne("#drawRect");
-        if (ifDrawRectExist) drawRect.remove();
+        if (ifDrawRectExist) ifDrawRectExist.remove();
 
         drawLayer.add(drawRect);
         historyStep++;
@@ -159,7 +159,7 @@ const inpainter = (function () {
       containerSizeOption.height = containerSize.height;
 
       const ifDrawRectExist = drawLayer.findOne("#drawRect") as Konva.Rect;
-      if (ifDrawRectExist) ifDrawRectExist.destroy();
+      if (ifDrawRectExist) ifDrawRectExist.remove();
 
       const img = new Image();
 
@@ -207,7 +207,7 @@ const inpainter = (function () {
             drawLayer.add(currentLine);
 
             const ifDrawRectExist = drawLayer.findOne("#drawRect");
-            if (ifDrawRectExist) drawRect.remove();
+            if (ifDrawRectExist) ifDrawRectExist.remove();
             drawLayer.add(drawRect);
           }
         }
@@ -373,7 +373,7 @@ const inpainter = (function () {
         img.onload = () => {
           if (drawLayer === null || drawRect === null) return;
           const ifDrawRectExist = drawLayer.findOne("#drawRect");
-          if (ifDrawRectExist) drawRect.remove();
+          if (ifDrawRectExist) ifDrawRectExist.remove();
 
           drawRect = new Konva.Rect({
             fillPatternImage: img,
