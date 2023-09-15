@@ -4,6 +4,7 @@ import {
   getContainSize,
   getDrawCursor,
   EventListeners,
+  convertBlackToTransparent,
 } from "./libs";
 
 const inpainter = (function () {
@@ -287,10 +288,12 @@ const inpainter = (function () {
       src,
       selectedWidth,
       selectedHeight,
+      maskSrc,
     }: {
       src: string;
       selectedWidth: number;
       selectedHeight: number;
+      maskSrc?: string;
     }) {
       const imageElement = new Image();
       const { width: containerWidth, height: containerHeight } =
@@ -298,7 +301,7 @@ const inpainter = (function () {
 
       if (containerWidth === null || containerHeight === null) return;
 
-      imageElement.onload = () => {
+      imageElement.onload = async () => {
         if (
           stage === null ||
           imageLayer === null ||
@@ -336,7 +339,7 @@ const inpainter = (function () {
 
         scale = stageRatio < imageRatio ? stageH / imageH : stageW / imageW;
 
-        imageLayer.destroyChildren();
+        imageLayer.removeChildren();
         imageLayer.add(
           new Konva.Image({ image: imageElement, width, height, x, y })
         );
@@ -372,6 +375,24 @@ const inpainter = (function () {
         drawRect.fillPatternScaleY(1 / scale);
         drawRect.width(drawLayer.width() * (1 / scale));
         drawRect.height(drawLayer.height() * (1 / scale));
+
+        if (maskSrc) {
+          const response = await convertBlackToTransparent(maskSrc);
+          if (response === undefined) return;
+          const image = new Image();
+
+          image.onload = () => {
+            if (drawLayer === null || drawRect === null) return;
+            const imageKonva = new Konva.Image({
+              image: image,
+            });
+            drawLayer.add(imageKonva);
+            const ifDrawRectExist = drawLayer.findOne("#drawRect");
+            if (ifDrawRectExist) drawRect.remove();
+            drawLayer.add(drawRect);
+          };
+          image.src = response;
+        }
       };
 
       imageElement.src = src;

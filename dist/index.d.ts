@@ -21,10 +21,11 @@ declare const inpainter: {
             height: null | number;
         };
     }) => Promise<true | undefined>;
-    importImage({ src, selectedWidth, selectedHeight, }: {
+    importImage({ src, selectedWidth, selectedHeight, maskSrc, }: {
         src: string;
         selectedWidth: number;
         selectedHeight: number;
+        maskSrc?: string | undefined;
     }): void;
     setStrokeWidth(width: number | string): void;
     setDrawingMode(mode: "brush" | "eraser" | "on" | "off"): void;

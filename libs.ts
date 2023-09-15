@@ -90,3 +90,43 @@ export class EventListeners<T extends Event.CallbackTypes> {
     this._listeners[event]?.forEach((fn) => fn(...args));
   }
 }
+
+export async function convertBlackToTransparent(imageUrl: string) {
+  const image = new Image();
+  image.crossOrigin = "anonymous";
+
+  const loadImagePromise = new Promise((resolve, reject) => {
+    image.onload = resolve;
+    image.onerror = reject;
+  });
+
+  image.src = imageUrl;
+  await loadImagePromise;
+
+  const canvas = document.createElement("canvas");
+  const context = canvas.getContext("2d");
+  if (context === null) return;
+  canvas.width = image.width;
+  canvas.height = image.height;
+
+  context.drawImage(image, 0, 0);
+
+  const imgData = context.getImageData(0, 0, canvas.width, canvas.height);
+
+  for (let i = 0; i < imgData.data.length; i += 4) {
+    const red = imgData.data[i];
+    const green = imgData.data[i + 1];
+    const blue = imgData.data[i + 2];
+
+    // 검정색 픽셀인 경우 투명하게 처리합니다.
+    if (red === 0 && green === 0 && blue === 0) {
+      imgData.data[i + 3] = 0; // Alpha 값을 0으로 설정하여 투명 처리
+    }
+  }
+
+  context.putImageData(imgData, 0, 0);
+
+  const transparentImageUrl = canvas.toDataURL();
+
+  return transparentImageUrl;
+}

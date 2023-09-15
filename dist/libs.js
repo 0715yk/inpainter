@@ -1,3 +1,12 @@
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
 export function getDrawCursor(strokeWidth) {
     const circle = `
   <svg
@@ -54,4 +63,36 @@ export class EventListeners {
         var _a;
         (_a = this._listeners[event]) === null || _a === void 0 ? void 0 : _a.forEach((fn) => fn(...args));
     }
+}
+export function convertBlackToTransparent(imageUrl) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const image = new Image();
+        image.crossOrigin = "anonymous";
+        const loadImagePromise = new Promise((resolve, reject) => {
+            image.onload = resolve;
+            image.onerror = reject;
+        });
+        image.src = imageUrl;
+        yield loadImagePromise;
+        const canvas = document.createElement("canvas");
+        const context = canvas.getContext("2d");
+        if (context === null)
+            return;
+        canvas.width = image.width;
+        canvas.height = image.height;
+        context.drawImage(image, 0, 0);
+        const imgData = context.getImageData(0, 0, canvas.width, canvas.height);
+        for (let i = 0; i < imgData.data.length; i += 4) {
+            const red = imgData.data[i];
+            const green = imgData.data[i + 1];
+            const blue = imgData.data[i + 2];
+            // 검정색 픽셀인 경우 투명하게 처리합니다.
+            if (red === 0 && green === 0 && blue === 0) {
+                imgData.data[i + 3] = 0; // Alpha 값을 0으로 설정하여 투명 처리
+            }
+        }
+        context.putImageData(imgData, 0, 0);
+        const transparentImageUrl = canvas.toDataURL();
+        return transparentImageUrl;
+    });
 }

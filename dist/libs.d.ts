@@ -20,3 +20,4 @@ export declare class EventListeners<T extends Event.CallbackTypes> {
     removeEventListener<E extends Event.Events<T>>(event: E, callback: T[E]): void;
     dispatch<E extends Event.Events<T>>(event: E, ...args: Event.CallbackArgs<E, T>): void;
 }
+export declare function convertBlackToTransparent(imageUrl: string): Promise<string | undefined>;
