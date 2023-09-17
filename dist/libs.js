@@ -10,19 +10,39 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 export function getDrawCursor(strokeWidth) {
     const circle = `
   <svg
-  height="${strokeWidth}"
-  viewBox="0 0 ${strokeWidth * 2} ${strokeWidth * 2}"
-  width="${strokeWidth}"
-  xmlns="http://www.w3.org/2000/svg"
->
-  <circle
-    cx="50%"
-    cy="50%"
-    r="${strokeWidth}" 
-    stroke="black"
-    fill="none"
-  />
-</svg>
+    height="${strokeWidth}"
+    width="${strokeWidth}"
+    viewBox="0 0 ${strokeWidth * 2} ${strokeWidth * 2}"
+    xmlns="http://www.w3.org/2000/svg"
+    >
+        <defs>
+            <mask 
+                id="maskingFrame"
+            >
+                <circle
+                    cx="50%"
+                    cy="50%"
+                    r="${strokeWidth}"
+                    stroke="#000000"
+                    fill="#FFFFFF"
+                    
+                />  
+                <circle
+                    cx="50%"
+                    cy="50%"
+                    r="${strokeWidth / 1.15}"
+                />
+            </mask>
+        </defs>
+        <circle
+            cx="50%"
+            cy="50%"
+            r="${strokeWidth * 3}"
+            mask="url(#maskingFrame)"  
+            fill="#FFFFFF" 
+         
+        />
+    </svg>
     `;
     return `url(data:image/svg+xml;base64,${window.btoa(circle)}) ${Math.ceil(strokeWidth / 2)} ${Math.ceil(strokeWidth / 2)}, pointer`;
 }
