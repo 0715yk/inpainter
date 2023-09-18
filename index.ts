@@ -103,7 +103,7 @@ const inpainter = (function () {
       eventListener.removeEventListener(eventType, eventCallback);
     },
 
-    init: function ({
+    init: async function ({
       container,
       brushOption,
       width,
@@ -269,23 +269,18 @@ const inpainter = (function () {
         });
       }
 
-      const img = new Image();
+      const img = await loadImage(patternSrc);
 
-      return new Promise((resolve) => {
-        img.onload = resolve;
-        img.src = patternSrc;
-      }).then(() => {
-        if (drawLayer === null) return;
-        drawRect = new Konva.Rect({
-          fillPatternImage: img,
-          id: "drawRect",
-          fillPatternRepeat: "no-repeat",
-          globalCompositeOperation: "source-in",
-          fillPriority: "pattern",
-        });
-        drawLayer.add(drawRect);
-        return true;
+      if (drawLayer === null) return;
+      drawRect = new Konva.Rect({
+        fillPatternImage: img,
+        id: "drawRect",
+        fillPatternRepeat: "no-repeat",
+        globalCompositeOperation: "source-in",
+        fillPriority: "pattern",
       });
+      drawLayer.add(drawRect);
+      return true;
     },
     async importImage({
       src,
