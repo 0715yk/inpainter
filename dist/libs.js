@@ -16,22 +16,26 @@ export function getDrawCursor(strokeWidth) {
                     r="${strokeWidth}"
                     stroke="#000000"
                     fill="#FFFFFF"
-                    
                 />  
                 <circle
                     cx="50%"
                     cy="50%"
-                    r="${strokeWidth / 1.15}"
+                    r="${strokeWidth / 1.2 + 0.6}"
+                    stroke="#000000"
+                    stroke-width="0.6"
+                    vector-effect="non-scaling-stroke"
                 />
             </mask>
         </defs>
         <circle
             cx="50%"
             cy="50%"
-            r="${strokeWidth * 3}"
+            r="${strokeWidth - 0.6}"
             mask="url(#maskingFrame)"  
-            fill="#FFFFFF" 
-         
+            stroke="#000000"
+            stroke-width="0.6"
+            fill="#FFFFFF"
+            vector-effect="non-scaling-stroke"
         />
     </svg>
     `;
