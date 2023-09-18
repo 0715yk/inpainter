@@ -1,4 +1,5 @@
 declare const inpainter: {
+    getStage(): import("konva/lib/Stage").Stage | null;
     goTo(index: number): void;
     undo(): void;
     redo(): void;
@@ -26,7 +27,7 @@ declare const inpainter: {
         selectedWidth: number;
         selectedHeight: number;
         maskSrc?: string | undefined;
-    }): void;
+    }): Promise<true | null | undefined>;
     setStrokeWidth(width: number | string): void;
     setDrawingMode(mode: "brush" | "eraser" | "on" | "off"): void;
     deleteImage(): void;

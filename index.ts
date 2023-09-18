@@ -37,6 +37,9 @@ const inpainter = (function () {
   const eventListener = new EventListeners();
 
   return {
+    getStage() {
+      return stage;
+    },
     goTo(index: number) {
       if (drawLayer === null) return;
 
@@ -284,7 +287,7 @@ const inpainter = (function () {
         return true;
       });
     },
-    importImage({
+    async importImage({
       src,
       selectedWidth,
       selectedHeight,
@@ -295,135 +298,132 @@ const inpainter = (function () {
       selectedHeight: number;
       maskSrc?: string;
     }) {
-      const imageElement = new Image();
       const { width: containerWidth, height: containerHeight } =
         containerSizeOption;
 
       if (containerWidth === null || containerHeight === null) return;
 
-      imageElement.onload = () => {
-        if (
-          stage === null ||
-          imageLayer === null ||
-          drawLayer === null ||
-          drawRect === null
-        )
-          return;
-        const { width: stageW, height: stageH } = getContainSize(
-          containerWidth,
-          containerHeight,
-          selectedWidth,
-          selectedHeight
-        );
+      const imageElement = (await loadImage(src)) as HTMLImageElement;
 
-        stage.width(stageW);
-        stage.height(stageH);
+      if (
+        stage === null ||
+        imageLayer === null ||
+        drawLayer === null ||
+        drawRect === null
+      )
+        return;
+      const { width: stageW, height: stageH } = getContainSize(
+        containerWidth,
+        containerHeight,
+        selectedWidth,
+        selectedHeight
+      );
 
-        const { width: imageW, height: imageH } = imageElement;
+      stage.width(stageW);
+      stage.height(stageH);
 
-        const stageRatio = stageW / stageH;
-        const imageRatio = imageW / imageH;
+      const { width: imageW, height: imageH } = imageElement;
 
-        let width = stageW;
-        let height = stageH;
-        let x = 0;
-        let y = 0;
+      const stageRatio = stageW / stageH;
+      const imageRatio = imageW / imageH;
 
-        if (stageRatio < imageRatio) {
-          width = stageH * imageRatio;
-          x = (stageW - width) / 2;
-        } else if (stageRatio > imageRatio) {
-          height = stageW / imageRatio;
-          y = (stageH - height) / 2;
+      let width = stageW;
+      let height = stageH;
+      let x = 0;
+      let y = 0;
+
+      if (stageRatio < imageRatio) {
+        width = stageH * imageRatio;
+        x = (stageW - width) / 2;
+      } else if (stageRatio > imageRatio) {
+        height = stageW / imageRatio;
+        y = (stageH - height) / 2;
+      }
+
+      scale = stageRatio < imageRatio ? stageH / imageH : stageW / imageW;
+
+      imageLayer.removeChildren();
+      imageLayer.add(
+        new Konva.Image({ image: imageElement, width, height, x, y })
+      );
+
+      const copyDiv = document.createElement("div");
+      copyDiv.id = "app";
+      document.body.appendChild(copyDiv);
+
+      const copyStage = new Konva.Stage({
+        container: "app",
+        width: stageW,
+        height: stageH,
+      });
+
+      copyStage.add(imageLayer.clone());
+      const base64 = copyStage.toCanvas().toDataURL("image/png", 0);
+      Object.assign(output, {
+        width: selectedWidth,
+        height: selectedHeight,
+        image: base64,
+      });
+
+      copyDiv.remove();
+      copyStage.remove();
+
+      drawLayer.position({ x, y });
+      drawLayer.scale({ x: scale, y: scale });
+      drawLayer.moveToTop();
+
+      drawRect.x(-(drawLayer.x() / scale));
+      drawRect.y(-(drawLayer.y() / scale));
+
+      drawRect.fillPatternScaleX(1 / scale);
+      drawRect.fillPatternScaleY(1 / scale);
+      drawRect.width(drawLayer.width() * (1 / scale));
+      drawRect.height(drawLayer.height() * (1 / scale));
+
+      if (maskSrc) {
+        const image = (await loadImage(maskSrc)) as HTMLImageElement;
+
+        const canvas = document.createElement("canvas");
+        const context = canvas.getContext("2d");
+        if (context === null) return;
+        canvas.width = image.width;
+        canvas.height = image.height;
+
+        context.drawImage(image, 0, 0);
+
+        const imgData = context.getImageData(0, 0, canvas.width, canvas.height);
+
+        for (let i = 0; i < imgData.data.length; i += 4) {
+          const red = imgData.data[i];
+          const green = imgData.data[i + 1];
+          const blue = imgData.data[i + 2];
+
+          // 검정색 픽셀인 경우 투명하게 처리합니다.
+          if (red === 0 && green === 0 && blue === 0) {
+            imgData.data[i + 3] = 0; // Alpha 값을 0으로 설정하여 투명 처리
+          }
         }
 
-        scale = stageRatio < imageRatio ? stageH / imageH : stageW / imageW;
+        context.putImageData(imgData, 0, 0);
 
-        imageLayer.removeChildren();
-        imageLayer.add(
-          new Konva.Image({ image: imageElement, width, height, x, y })
-        );
+        const transparentImageUrl = canvas.toDataURL() as string;
 
-        const copyDiv = document.createElement("div");
-        copyDiv.id = "app";
-        document.body.appendChild(copyDiv);
+        const imageEl = (await loadImage(
+          transparentImageUrl
+        )) as HTMLImageElement;
 
-        const copyStage = new Konva.Stage({
-          container: "app",
-          width: stageW,
-          height: stageH,
+        const imageKonva = new Konva.Image({
+          image: imageEl,
         });
+        drawLayer.add(imageKonva);
+        const ifDrawRectExist = drawLayer.findOne("#drawRect");
+        if (ifDrawRectExist) drawRect.remove();
+        drawLayer.add(drawRect);
 
-        copyStage.add(imageLayer.clone());
-        const base64 = copyStage.toCanvas().toDataURL("image/png", 0);
-        Object.assign(output, {
-          width: selectedWidth,
-          height: selectedHeight,
-          image: base64,
-        });
-
-        copyDiv.remove();
-        copyStage.remove();
-
-        drawLayer.position({ x, y });
-        drawLayer.scale({ x: scale, y: scale });
-        drawLayer.moveToTop();
-
-        drawRect.x(-(drawLayer.x() / scale));
-        drawRect.y(-(drawLayer.y() / scale));
-        ``;
-        drawRect.fillPatternScaleX(1 / scale);
-        drawRect.fillPatternScaleY(1 / scale);
-        drawRect.width(drawLayer.width() * (1 / scale));
-        drawRect.height(drawLayer.height() * (1 / scale));
-
-        if (maskSrc) {
-          loadImage(maskSrc).then((image: HTMLImageElement) => {
-            const canvas = document.createElement("canvas");
-            const context = canvas.getContext("2d");
-            if (context === null) return;
-            canvas.width = image.width;
-            canvas.height = image.height;
-
-            context.drawImage(image, 0, 0);
-
-            const imgData = context.getImageData(
-              0,
-              0,
-              canvas.width,
-              canvas.height
-            );
-
-            for (let i = 0; i < imgData.data.length; i += 4) {
-              const red = imgData.data[i];
-              const green = imgData.data[i + 1];
-              const blue = imgData.data[i + 2];
-
-              // 검정색 픽셀인 경우 투명하게 처리합니다.
-              if (red === 0 && green === 0 && blue === 0) {
-                imgData.data[i + 3] = 0; // Alpha 값을 0으로 설정하여 투명 처리
-              }
-            }
-
-            context.putImageData(imgData, 0, 0);
-
-            const transparentImageUrl = canvas.toDataURL() as string;
-
-            loadImage(transparentImageUrl).then((image: HTMLImageElement) => {
-              if (drawLayer === null || drawRect === null) return;
-              const imageKonva = new Konva.Image({
-                image: image,
-              });
-              drawLayer.add(imageKonva);
-              const ifDrawRectExist = drawLayer.findOne("#drawRect");
-              if (ifDrawRectExist) drawRect.remove();
-              drawLayer.add(drawRect);
-            });
-          });
-        }
-      };
-
-      imageElement.src = src;
+        return true;
+      } else {
+        return null;
+      }
     },
     setStrokeWidth(width: number | string) {
       if (typeof width === "string") {
@@ -477,93 +477,82 @@ const inpainter = (function () {
         historyStep = 0;
       }
     },
-    exportMask() {
+    async exportMask() {
+      if (stage === null) return;
       const canvas = document.createElement("canvas");
       const context = canvas.getContext("2d");
-      const foreground = new Image();
 
       canvas.width = output.width;
       canvas.height = output.height;
 
-      return new Promise((resolve) => {
-        foreground.onload = resolve;
-        if (stage !== null) {
-          const copyStage = stage.clone();
-          copyStage.container().style.backgroundColor = "black";
-          const copyImageLayer = copyStage.findOne("#imageLayer");
-          copyImageLayer.hide();
-          const copyDrawLayer = copyStage.findOne("#drawLayer") as Konva.Layer;
-          copyDrawLayer.show();
-          copyDrawLayer.children?.forEach((el) => {
-            if (el.id() === "drawRect") {
-              el.destroy();
-            }
-          });
-
-          foreground.src = copyStage.toDataURL({ pixelRatio: 2 });
+      const copyStage = stage.clone();
+      copyStage.container().style.backgroundColor = "black";
+      const copyImageLayer = copyStage.findOne("#imageLayer");
+      copyImageLayer.hide();
+      const copyDrawLayer = copyStage.findOne("#drawLayer") as Konva.Layer;
+      copyDrawLayer.show();
+      copyDrawLayer?.children?.forEach((el) => {
+        if (el.id() === "drawRect") {
+          el.destroy();
         }
-      }).then(() => {
-        if (context !== null) {
-          context.drawImage(foreground, 0, 0, output.width, output.height);
-          const drawingCanvas = canvas;
-          if (drawingCanvas !== undefined) {
-            const context = drawingCanvas.getContext("2d");
-            if (context !== null) {
-              context.globalCompositeOperation = "source-in";
-              context.fillStyle = "white";
-              context.fillRect(0, 0, drawingCanvas.width, drawingCanvas.height);
-              context.drawImage(drawingCanvas, 0, 0);
+      });
 
-              const imgData = context.getImageData(
-                0,
-                0,
-                drawingCanvas.width,
-                drawingCanvas.height
-              );
+      const pngURL = copyStage.toDataURL({ pixelRatio: 2 });
+      const imageElement = await loadImage(pngURL);
+      if (context !== null) {
+        context.drawImage(imageElement, 0, 0, output.width, output.height);
+        const drawingCanvas = canvas;
+        if (drawingCanvas !== undefined) {
+          const context = drawingCanvas.getContext("2d");
+          if (context !== null) {
+            context.globalCompositeOperation = "source-in";
+            context.fillStyle = "white";
+            context.fillRect(0, 0, drawingCanvas.width, drawingCanvas.height);
+            context.drawImage(drawingCanvas, 0, 0);
 
-              for (let i = 0; i < imgData.data.length; i += 4) {
-                const count =
-                  imgData.data[i] + imgData.data[i + 1] + imgData.data[i + 2];
-                let colour = 0;
-                if (count > 383) colour = 255;
+            const imgData = context.getImageData(
+              0,
+              0,
+              drawingCanvas.width,
+              drawingCanvas.height
+            );
 
-                imgData.data[i] = colour;
-                imgData.data[i + 1] = colour;
-                imgData.data[i + 2] = colour;
-                imgData.data[i + 3] = 255;
-              }
+            for (let i = 0; i < imgData.data.length; i += 4) {
+              const count =
+                imgData.data[i] + imgData.data[i + 1] + imgData.data[i + 2];
+              let colour = 0;
+              if (count > 383) colour = 255;
 
-              context.putImageData(imgData, 0, 0);
-              const pngURL = drawingCanvas.toDataURL("image/png");
-              return pngURL;
+              imgData.data[i] = colour;
+              imgData.data[i + 1] = colour;
+              imgData.data[i + 2] = colour;
+              imgData.data[i + 3] = 255;
             }
+
+            context.putImageData(imgData, 0, 0);
+            const pngURL = drawingCanvas.toDataURL("image/png");
+            return pngURL;
           }
         }
-      });
+      }
     },
-    exportImage() {
+    async exportImage() {
+      if (stage === null) return;
       const canvas = document.createElement("canvas");
       const context = canvas.getContext("2d");
-      const foreground = new Image();
 
       canvas.width = output.width;
       canvas.height = output.height;
-
-      return new Promise((resolve) => {
-        if (stage === null) return;
-        foreground.onload = resolve;
-
-        const copyStage = stage.clone();
-        const copyDrawLayer = copyStage.findOne("#drawLayer");
-        copyDrawLayer.hide();
-        foreground.src = copyStage.toDataURL({ pixelRatio: 2 });
-      }).then(() => {
-        if (context !== null) {
-          context.drawImage(foreground, 0, 0, output.width, output.height);
-          const pngURL = canvas.toDataURL("image/png");
-          return pngURL;
-        }
-      });
+      const copyStage = stage.clone();
+      const copyDrawLayer = copyStage.findOne("#drawLayer");
+      copyDrawLayer.hide();
+      const pngURL = copyStage.toDataURL({ pixelRatio: 2 });
+      const imageElement = await loadImage(pngURL);
+      if (context !== null) {
+        context.drawImage(imageElement, 0, 0, output.width, output.height);
+        const pngURL = canvas.toDataURL("image/png");
+        return pngURL;
+      }
     },
   };
 })();
