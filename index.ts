@@ -418,6 +418,7 @@ const inpainter = (function () {
         drawLayer.add(imageKonva);
         const ifDrawRectExist = drawLayer.findOne("#drawRect");
         if (ifDrawRectExist) drawRect.remove();
+        console.log(drawRect);
         drawLayer.add(drawRect);
 
         return true;
@@ -471,8 +472,8 @@ const inpainter = (function () {
     },
     deleteImage() {
       if (drawLayer !== null && imageLayer !== null) {
-        drawLayer.destroyChildren();
-        imageLayer.destroyChildren();
+        drawLayer.removeChildren();
+        imageLayer.removeChildren();
         history = [];
         historyStep = 0;
       }
@@ -493,7 +494,7 @@ const inpainter = (function () {
       copyDrawLayer.show();
       copyDrawLayer?.children?.forEach((el) => {
         if (el.id() === "drawRect") {
-          el.destroy();
+          el.remove();
         }
       });
 

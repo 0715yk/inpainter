@@ -331,6 +331,7 @@ const inpainter = (function () {
                     const ifDrawRectExist = drawLayer.findOne("#drawRect");
                     if (ifDrawRectExist)
                         drawRect.remove();
+                    console.log(drawRect);
                     drawLayer.add(drawRect);
                     return true;
                 }
@@ -383,8 +384,8 @@ const inpainter = (function () {
         },
         deleteImage() {
             if (drawLayer !== null && imageLayer !== null) {
-                drawLayer.destroyChildren();
-                imageLayer.destroyChildren();
+                drawLayer.removeChildren();
+                imageLayer.removeChildren();
                 history = [];
                 historyStep = 0;
             }
@@ -406,7 +407,7 @@ const inpainter = (function () {
                 copyDrawLayer.show();
                 (_a = copyDrawLayer === null || copyDrawLayer === void 0 ? void 0 : copyDrawLayer.children) === null || _a === void 0 ? void 0 : _a.forEach((el) => {
                     if (el.id() === "drawRect") {
-                        el.destroy();
+                        el.remove();
                     }
                 });
                 const pngURL = copyStage.toDataURL({ pixelRatio: 2 });
