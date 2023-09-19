@@ -284,7 +284,7 @@ const inpainter = (function () {
         fillPriority: "pattern",
       });
       drawLayer.add(drawRect);
-      console.log(drawLayer, drawRect, "init clear");
+
       return true;
     },
     async importImage({
@@ -418,7 +418,6 @@ const inpainter = (function () {
         drawLayer.add(imageKonva);
         const ifDrawRectExist = drawLayer.findOne("#drawRect");
         if (ifDrawRectExist) drawRect.remove();
-        console.log(drawRect, drawLayer, "imageImport clear");
         drawLayer.add(drawRect);
 
         return true;
