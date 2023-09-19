@@ -30,6 +30,11 @@ const inpainter = (function () {
     let drawRect = null;
     const containerSizeOption = { width: null, height: null };
     const eventListener = new EventListeners();
+    window.addEventListener("resize", function () {
+        if (stage === null)
+            return;
+        stage.container().style.cursor = getDrawCursor(brushOptions.strokeWidth);
+    });
     return {
         getStage() {
             return stage;

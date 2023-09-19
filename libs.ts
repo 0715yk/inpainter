@@ -1,48 +1,26 @@
 export function getDrawCursor(strokeWidth: number) {
+  strokeWidth *= window.devicePixelRatio;
   const circle = `
   <svg
-    height="${strokeWidth}"
-    width="${strokeWidth}"
-    viewBox="0 0 ${strokeWidth * 2} ${strokeWidth * 2}"
+    height="${strokeWidth + 12}"
+    width="${strokeWidth + 12}"
+    viewBox="0 0 ${(strokeWidth + 12) * 2} ${(strokeWidth + 12) * 2}"
     xmlns="http://www.w3.org/2000/svg"
     >
-        <defs>
-            <mask 
-                id="maskingFrame"
-            >
-                <circle
-                    cx="50%"
-                    cy="50%"
-                    r="${strokeWidth}"
-                    stroke="#000000"
-                    fill="#FFFFFF"
-                />  
-                <circle
-                    cx="50%"
-                    cy="50%"
-                    r="${strokeWidth / 1.2 + 0.6}"
-                    stroke="#000000"
-                    stroke-width="0.6"
-                    vector-effect="non-scaling-stroke"
-                />
-            </mask>
-        </defs>
         <circle
             cx="50%"
             cy="50%"
-            r="${strokeWidth - 0.6}"
-            mask="url(#maskingFrame)"  
-            stroke="#000000"
-            stroke-width="0.6"
-            fill="#FFFFFF"
-            vector-effect="non-scaling-stroke"
+            r="${strokeWidth + 6}"
+            stroke="#fff"
+            stroke-width="6"
+            fill="none"
         />
     </svg>
     `;
 
   return `url(data:image/svg+xml;base64,${window.btoa(circle)}) ${Math.ceil(
-    strokeWidth / 2
-  )} ${Math.ceil(strokeWidth / 2)}, pointer`;
+    (strokeWidth + 12) / 2
+  )} ${Math.ceil((strokeWidth + 12) / 2)}, pointer`;
 }
 
 export function getContainSize(

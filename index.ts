@@ -35,6 +35,11 @@ const inpainter = (function () {
 
   const eventListener = new EventListeners();
 
+  window.addEventListener("resize", function () {
+    if (stage === null) return;
+    stage.container().style.cursor = getDrawCursor(brushOptions.strokeWidth);
+  });
+
   return {
     getStage() {
       return stage;
