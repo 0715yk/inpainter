@@ -45,19 +45,6 @@ export function getDrawCursor(strokeWidth: number) {
   )} ${Math.ceil(strokeWidth / 2)}, pointer`;
 }
 
-export function dataURItoBlob(dataURI: string) {
-  const byteString = window.atob(dataURI.split(",")[1]);
-  const mimeString = dataURI.split(",")[0].split(":")[1].split(";")[0];
-  const ab = new ArrayBuffer(byteString.length);
-  const ia = new Uint8Array(ab);
-  for (let i = 0; i < byteString.length; i++) {
-    ia[i] = byteString.charCodeAt(i);
-  }
-
-  const bb = new Blob([ab], { type: mimeString });
-  return bb;
-}
-
 export function getContainSize(
   containerWidth: number,
   containerHeight: number,

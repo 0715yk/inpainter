@@ -329,6 +329,7 @@ const inpainter = (function () {
                     if (ifDrawRectExist)
                         drawRect.remove();
                     console.log(drawRect);
+                    console.log(drawLayer);
                     drawLayer.add(drawRect);
                     return true;
                 }

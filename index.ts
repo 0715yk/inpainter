@@ -1,6 +1,5 @@
 import Konva from "konva";
 import {
-  dataURItoBlob,
   getContainSize,
   getDrawCursor,
   EventListeners,
@@ -414,6 +413,7 @@ const inpainter = (function () {
         const ifDrawRectExist = drawLayer.findOne("#drawRect");
         if (ifDrawRectExist) drawRect.remove();
         console.log(drawRect);
+        console.log(drawLayer);
         drawLayer.add(drawRect);
 
         return true;
