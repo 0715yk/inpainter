@@ -38,7 +38,7 @@ const inpainter = (function () {
       return stage;
     },
     goTo(index: number) {
-      if (drawLayer === null) return;
+      if (drawLayer === null || stage === null) return;
 
       history = history.filter((line, _) => {
         if (_ >= index) {
@@ -50,13 +50,18 @@ const inpainter = (function () {
       });
       drawLayer.batchDraw();
       historyStep = index;
+
+      const copyStage = stage.clone();
+      const cLayer = copyStage.findOne("#cursorLayer") as Konva.Layer;
+      cLayer.remove();
+
       eventListener.dispatch("change", {
         cnt: historyStep,
-        stage: stage?.toJSON(),
+        stage: copyStage?.toJSON(),
       });
     },
     undo() {
-      if (historyStep === 0) {
+      if (historyStep === 0 || stage === null) {
         return;
       }
       historyStep--;
@@ -64,14 +69,23 @@ const inpainter = (function () {
       if (lineToRemove !== undefined && drawLayer !== null) {
         lineToRemove.remove();
         drawLayer.batchDraw();
+
+        const copyStage = stage.clone();
+        const cLayer = copyStage.findOne("#cursorLayer") as Konva.Layer;
+        cLayer.remove();
+
         eventListener.dispatch("change", {
           cnt: historyStep,
-          stage: stage?.toJSON(),
+          stage: copyStage?.toJSON(),
         });
       }
     },
     redo() {
-      if (historyStep === history.length || drawRect === null) {
+      if (
+        historyStep === history.length ||
+        drawRect === null ||
+        stage === null
+      ) {
         return;
       }
 
@@ -85,9 +99,13 @@ const inpainter = (function () {
 
         historyStep++;
 
+        const copyStage = stage.clone();
+        const cLayer = copyStage.findOne("#cursorLayer") as Konva.Layer;
+        cLayer.remove();
+
         eventListener.dispatch("change", {
           cnt: historyStep,
-          stage: stage?.toJSON(),
+          stage: copyStage?.toJSON(),
         });
       }
     },
@@ -133,13 +151,21 @@ const inpainter = (function () {
         stage = Konva.Node.create(cache, container) as Konva.Stage;
         const iLayer = stage.findOne("#imageLayer") as Konva.Layer;
         const dLayer = stage.findOne("#drawLayer") as Konva.Layer;
-        const cLayer = stage.findOne("#cursorLayer") as Konva.Layer;
-        const cursor = cLayer.findOne("#ring") as Konva.Ring;
+        cursorLayer = new Konva.Layer({
+          id: "cursorLayer",
+        });
+
+        cursorRing = new Konva.Ring({
+          innerRadius: brushOptions.strokeWidth / 2 / scale,
+          outerRadius: (brushOptions.strokeWidth / 2 + 3) / scale,
+          fill: "#FFFFFF",
+          id: "ring",
+          stroke: "black",
+          strokeWidth: 0.6,
+        });
 
         imageLayer = iLayer;
         drawLayer = dLayer;
-        cursorLayer = cLayer;
-        cursorRing = cursor;
       } else {
         stage = new Konva.Stage({
           container,
@@ -234,6 +260,7 @@ const inpainter = (function () {
       });
 
       stage.on("mouseup", () => {
+        if (stage === null) return;
         if (!drawingModeOn) return;
         if (!isPaint) return;
 
@@ -243,9 +270,14 @@ const inpainter = (function () {
           history = history.slice(0, historyStep);
           history.push(currentLine);
           historyStep++;
+
+          const copyStage = stage.clone();
+          const cLayer = copyStage.findOne("#cursorLayer") as Konva.Layer;
+          cLayer.remove();
+
           eventListener.dispatch("change", {
             cnt: historyStep,
-            stage: stage?.toJSON(),
+            stage: copyStage?.toJSON(),
           });
         }
       });
@@ -266,6 +298,7 @@ const inpainter = (function () {
         });
 
         divElement?.addEventListener("mouseleave", function () {
+          if (stage === null) return;
           if (cursorLayer !== null) cursorLayer.hide();
           if (!isPaint) return;
           if (!drawingModeOn) return;
@@ -276,9 +309,14 @@ const inpainter = (function () {
             history = history.slice(0, historyStep + 1);
             history.push(currentLine);
             historyStep++;
+
+            const copyStage = stage.clone();
+            const cLayer = copyStage.findOne("#cursorLayer") as Konva.Layer;
+            cLayer.remove();
+
             eventListener.dispatch("change", {
               cnt: historyStep,
-              stage: stage?.toJSON(),
+              stage: copyStage?.toJSON(),
             });
           }
         });
@@ -293,6 +331,7 @@ const inpainter = (function () {
         });
 
         divElement?.addEventListener("mouseleave", function () {
+          if (stage === null) return;
           if (cursorLayer !== null) cursorLayer.hide();
           if (!isPaint) return;
           if (!drawingModeOn) return;
@@ -303,9 +342,14 @@ const inpainter = (function () {
             history = history.slice(0, historyStep + 1);
             history.push(currentLine);
             historyStep++;
+
+            const copyStage = stage.clone();
+            const cLayer = copyStage.findOne("#cursorLayer") as Konva.Layer;
+            cLayer.remove();
+
             eventListener.dispatch("change", {
               cnt: historyStep,
-              stage: stage?.toJSON(),
+              stage: copyStage?.toJSON(),
             });
           }
         });
