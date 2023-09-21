@@ -171,6 +171,7 @@ const inpainter = (function () {
       stage.add(drawLayer);
       stage.add(cursorLayer);
       cursorLayer.add(cursorRing);
+      cursorLayer.hide();
 
       let isPaint = false;
 
@@ -259,14 +260,14 @@ const inpainter = (function () {
       if (container instanceof HTMLDivElement) {
         const divElement = container.firstChild;
         divElement?.addEventListener("mouseenter", function () {
-          if (cursorRing !== null) {
-            cursorRing.show();
-            cursorRing.moveToTop();
+          if (cursorLayer !== null) {
+            cursorLayer.show();
+            cursorLayer.moveToTop();
           }
         });
 
         divElement?.addEventListener("mouseleave", function () {
-          if (cursorRing !== null) cursorRing.hide();
+          if (cursorLayer !== null) cursorLayer.hide();
           if (!isPaint) return;
           if (!drawingModeOn) return;
 
@@ -286,14 +287,14 @@ const inpainter = (function () {
         const divElement = document.querySelector(container)?.firstChild;
 
         divElement?.addEventListener("mouseenter", function () {
-          if (cursorRing !== null) {
-            cursorRing.show();
-            cursorRing.moveToTop();
+          if (cursorLayer !== null) {
+            cursorLayer.show();
+            cursorLayer.moveToTop();
           }
         });
 
         divElement?.addEventListener("mouseleave", function () {
-          if (cursorRing !== null) cursorRing.hide();
+          if (cursorLayer !== null) cursorLayer.hide();
           if (!isPaint) return;
           if (!drawingModeOn) return;
 
@@ -336,8 +337,6 @@ const inpainter = (function () {
       selectedHeight: number;
       maskSrc?: string;
     }) {
-      if (cursorLayer !== null) cursorLayer.show();
-
       const { width: containerWidth, height: containerHeight } =
         containerSizeOption;
 
@@ -500,7 +499,7 @@ const inpainter = (function () {
           drawingModeOn = true;
           drawLayer.show();
           stage.container().style.cursor = "none";
-          cursorLayer.show();
+
           if (cursorRing !== null) {
             cursorRing?.innerRadius(brushOptions.strokeWidth / 2 / scale);
             cursorRing?.outerRadius((brushOptions.strokeWidth / 2 + 3) / scale);
@@ -509,7 +508,7 @@ const inpainter = (function () {
           drawingModeOn = true;
           drawLayer.show();
           stage.container().style.cursor = "none";
-          cursorLayer.show();
+
           if (cursorRing !== null) {
             cursorRing?.innerRadius(brushOptions.strokeWidth / 2 / scale);
             cursorRing?.outerRadius((brushOptions.strokeWidth / 2 + 3) / scale);

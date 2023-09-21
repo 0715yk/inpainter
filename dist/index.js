@@ -142,6 +142,7 @@ const inpainter = (function () {
                 stage.add(drawLayer);
                 stage.add(cursorLayer);
                 cursorLayer.add(cursorRing);
+                cursorLayer.hide();
                 let isPaint = false;
                 containerSizeOption.width = containerSize.width;
                 containerSizeOption.height = containerSize.height;
@@ -216,14 +217,14 @@ const inpainter = (function () {
                 if (container instanceof HTMLDivElement) {
                     const divElement = container.firstChild;
                     divElement === null || divElement === void 0 ? void 0 : divElement.addEventListener("mouseenter", function () {
-                        if (cursorRing !== null) {
-                            cursorRing.show();
-                            cursorRing.moveToTop();
+                        if (cursorLayer !== null) {
+                            cursorLayer.show();
+                            cursorLayer.moveToTop();
                         }
                     });
                     divElement === null || divElement === void 0 ? void 0 : divElement.addEventListener("mouseleave", function () {
-                        if (cursorRing !== null)
-                            cursorRing.hide();
+                        if (cursorLayer !== null)
+                            cursorLayer.hide();
                         if (!isPaint)
                             return;
                         if (!drawingModeOn)
@@ -243,14 +244,14 @@ const inpainter = (function () {
                 else {
                     const divElement = (_a = document.querySelector(container)) === null || _a === void 0 ? void 0 : _a.firstChild;
                     divElement === null || divElement === void 0 ? void 0 : divElement.addEventListener("mouseenter", function () {
-                        if (cursorRing !== null) {
-                            cursorRing.show();
-                            cursorRing.moveToTop();
+                        if (cursorLayer !== null) {
+                            cursorLayer.show();
+                            cursorLayer.moveToTop();
                         }
                     });
                     divElement === null || divElement === void 0 ? void 0 : divElement.addEventListener("mouseleave", function () {
-                        if (cursorRing !== null)
-                            cursorRing.hide();
+                        if (cursorLayer !== null)
+                            cursorLayer.hide();
                         if (!isPaint)
                             return;
                         if (!drawingModeOn)
@@ -283,8 +284,6 @@ const inpainter = (function () {
         },
         importImage({ src, selectedWidth, selectedHeight, maskSrc, }) {
             return __awaiter(this, void 0, void 0, function* () {
-                if (cursorLayer !== null)
-                    cursorLayer.show();
                 const { width: containerWidth, height: containerHeight } = containerSizeOption;
                 if (containerWidth === null || containerHeight === null)
                     return;
@@ -415,7 +414,6 @@ const inpainter = (function () {
                     drawingModeOn = true;
                     drawLayer.show();
                     stage.container().style.cursor = "none";
-                    cursorLayer.show();
                     if (cursorRing !== null) {
                         cursorRing === null || cursorRing === void 0 ? void 0 : cursorRing.innerRadius(brushOptions.strokeWidth / 2 / scale);
                         cursorRing === null || cursorRing === void 0 ? void 0 : cursorRing.outerRadius((brushOptions.strokeWidth / 2 + 3) / scale);
@@ -425,7 +423,6 @@ const inpainter = (function () {
                     drawingModeOn = true;
                     drawLayer.show();
                     stage.container().style.cursor = "none";
-                    cursorLayer.show();
                     if (cursorRing !== null) {
                         cursorRing === null || cursorRing === void 0 ? void 0 : cursorRing.innerRadius(brushOptions.strokeWidth / 2 / scale);
                         cursorRing === null || cursorRing === void 0 ? void 0 : cursorRing.outerRadius((brushOptions.strokeWidth / 2 + 3) / scale);
