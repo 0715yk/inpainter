@@ -137,11 +137,11 @@ const inpainter = (function () {
                         strokeWidth: 0.6,
                         zIndex: 9999,
                     });
-                    stage.add(imageLayer);
-                    stage.add(drawLayer);
-                    stage.add(cursorLayer);
-                    cursorLayer.add(cursorRing);
                 }
+                stage.add(imageLayer);
+                stage.add(drawLayer);
+                stage.add(cursorLayer);
+                cursorLayer.add(cursorRing);
                 let isPaint = false;
                 containerSizeOption.width = containerSize.width;
                 containerSizeOption.height = containerSize.height;
@@ -150,7 +150,7 @@ const inpainter = (function () {
                     if (!drawingModeOn)
                         return;
                     isPaint = true;
-                    if (stage !== null && drawRect !== null && cursorRing !== null) {
+                    if (stage !== null && drawRect !== null) {
                         const pointerPosition = stage.getPointerPosition();
                         if (drawLayer !== null && pointerPosition !== null) {
                             const x = (pointerPosition.x - drawLayer.x()) / scale;
@@ -164,8 +164,6 @@ const inpainter = (function () {
                                 points: [x, y, x, y],
                             });
                             drawLayer.add(currentLine);
-                            cursorRing.x(x);
-                            cursorRing.y(y);
                             const ifDrawRectExist = drawLayer.findOne("#drawRect");
                             if (ifDrawRectExist)
                                 drawRect.remove();
@@ -174,16 +172,20 @@ const inpainter = (function () {
                     }
                 });
                 stage.on("mousemove", ({ evt }) => {
-                    if (!drawingModeOn)
-                        return;
-                    if (!isPaint)
-                        return;
                     evt.preventDefault();
                     if (stage !== null) {
                         const pointerPosition = stage.getPointerPosition();
-                        if (drawLayer !== null && pointerPosition !== null) {
+                        if (drawLayer !== null &&
+                            pointerPosition !== null &&
+                            cursorRing !== null) {
                             const x = (pointerPosition.x - drawLayer.x()) / scale;
                             const y = (pointerPosition.y - drawLayer.y()) / scale;
+                            cursorRing.x(x);
+                            cursorRing.y(y);
+                            if (!drawingModeOn)
+                                return;
+                            if (!isPaint)
+                                return;
                             if (currentLine !== null) {
                                 currentLine.points(currentLine.points().concat([x, y]));
                             }
@@ -281,6 +283,8 @@ const inpainter = (function () {
         },
         importImage({ src, selectedWidth, selectedHeight, maskSrc, }) {
             return __awaiter(this, void 0, void 0, function* () {
+                if (cursorLayer !== null)
+                    cursorLayer.show();
                 const { width: containerWidth, height: containerHeight } = containerSizeOption;
                 if (containerWidth === null || containerHeight === null)
                     return;
@@ -288,7 +292,8 @@ const inpainter = (function () {
                 if (stage === null ||
                     imageLayer === null ||
                     drawLayer === null ||
-                    drawRect === null)
+                    drawRect === null ||
+                    cursorLayer === null)
                     return;
                 const { width: stageW, height: stageH } = getContainSize(containerWidth, containerHeight, selectedWidth, selectedHeight);
                 stage.width(stageW);
@@ -331,12 +336,17 @@ const inpainter = (function () {
                 drawLayer.position({ x, y });
                 drawLayer.scale({ x: scale, y: scale });
                 drawLayer.moveToTop();
+                cursorLayer.position({ x, y });
+                cursorLayer.scale({ x: scale, y: scale });
+                cursorLayer.moveToTop();
                 drawRect.x(-(drawLayer.x() / scale));
                 drawRect.y(-(drawLayer.y() / scale));
                 drawRect.fillPatternScaleX(1 / scale);
                 drawRect.fillPatternScaleY(1 / scale);
                 drawRect.width(drawLayer.width() * (1 / scale));
                 drawRect.height(drawLayer.height() * (1 / scale));
+                cursorRing === null || cursorRing === void 0 ? void 0 : cursorRing.innerRadius(brushOptions.strokeWidth / 2 / scale);
+                cursorRing === null || cursorRing === void 0 ? void 0 : cursorRing.outerRadius((brushOptions.strokeWidth / 2 + 3) / scale);
                 if (maskSrc) {
                     const image = (yield loadImage(maskSrc));
                     const canvas = document.createElement("canvas");
@@ -428,7 +438,7 @@ const inpainter = (function () {
             if (drawLayer !== null && imageLayer !== null && cursorLayer !== null) {
                 drawLayer.removeChildren();
                 imageLayer.removeChildren();
-                cursorLayer.removeChildren();
+                cursorLayer.hide();
                 history = [];
                 historyStep = 0;
             }
