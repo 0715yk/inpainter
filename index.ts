@@ -1,10 +1,5 @@
 import Konva from "konva";
-import {
-  getContainSize,
-  getDrawCursor,
-  EventListeners,
-  loadImage,
-} from "./libs";
+import { getContainSize, EventListeners, loadImage } from "./libs";
 
 const inpainter = (function () {
   const output = {
@@ -25,8 +20,11 @@ const inpainter = (function () {
   let stage = null as null | Konva.Stage;
   let drawLayer = null as null | Konva.Layer;
   let imageLayer = null as null | Konva.Layer;
+  let cursorLayer = null as null | Konva.Layer;
+
   let currentLine: Konva.Line | null = null;
   let drawRect: Konva.Rect | null = null;
+  let cursorRing: Konva.Ring | null = null;
 
   const containerSizeOption: {
     width: null | number;
@@ -34,11 +32,6 @@ const inpainter = (function () {
   } = { width: null, height: null };
 
   const eventListener = new EventListeners();
-
-  window.addEventListener("resize", function () {
-    if (stage === null) return;
-    stage.container().style.cursor = getDrawCursor(brushOptions.strokeWidth);
-  });
 
   return {
     getStage() {
@@ -132,13 +125,21 @@ const inpainter = (function () {
         height: null | number;
       };
     }) {
+      if (brushOption) {
+        brushOptions.strokeWidth = brushOption.strokeWidth;
+      }
+
       if (cache) {
         stage = Konva.Node.create(cache, container) as Konva.Stage;
         const iLayer = stage.findOne("#imageLayer") as Konva.Layer;
         const dLayer = stage.findOne("#drawLayer") as Konva.Layer;
+        const cLayer = stage.findOne("#cursorLayer") as Konva.Layer;
+        const cursor = cLayer.findOne("#ring") as Konva.Ring;
 
         imageLayer = iLayer;
         drawLayer = dLayer;
+        cursorLayer = cLayer;
+        cursorRing = cursor;
       } else {
         stage = new Konva.Stage({
           container,
@@ -152,29 +153,42 @@ const inpainter = (function () {
         drawLayer = new Konva.Layer({
           id: "drawLayer",
         });
+        cursorLayer = new Konva.Layer({
+          id: "cursorLayer",
+        });
+
+        cursorRing = new Konva.Ring({
+          innerRadius: brushOptions.strokeWidth / 2 / scale,
+          outerRadius: (brushOptions.strokeWidth / 2 + 3) / scale,
+          fill: "#FFFFFF",
+          id: "ring",
+          stroke: "black",
+          strokeWidth: 0.6,
+          zIndex: 9999,
+        });
+
         stage.add(imageLayer);
         stage.add(drawLayer);
+        stage.add(cursorLayer);
+        cursorLayer.add(cursorRing);
       }
 
       let isPaint = false;
 
-      if (brushOption) {
-        brushOptions.strokeWidth = brushOption.strokeWidth;
-      }
-
       containerSizeOption.width = containerSize.width;
       containerSizeOption.height = containerSize.height;
+
+      stage.container().style.cursor = "none";
 
       stage.on("mousedown", () => {
         if (!drawingModeOn) return;
         isPaint = true;
 
-        if (stage !== null && drawRect !== null) {
+        if (stage !== null && drawRect !== null && cursorRing !== null) {
           const pointerPosition = stage.getPointerPosition();
           if (drawLayer !== null && pointerPosition !== null) {
             const x = (pointerPosition.x - drawLayer.x()) / scale;
             const y = (pointerPosition.y - drawLayer.y()) / scale;
-            const minValue = 0.0001;
 
             currentLine = new Konva.Line({
               stroke: "#FFFFFF",
@@ -183,10 +197,11 @@ const inpainter = (function () {
                 drawingMode === "brush" ? "source-over" : "destination-out",
               lineCap: "round",
               lineJoin: "round",
-              points: [x, y, x + minValue, y + minValue],
+              points: [x, y, x, y],
             });
             drawLayer.add(currentLine);
-
+            cursorRing.x(x);
+            cursorRing.y(y);
             const ifDrawRectExist = drawLayer.findOne("#drawRect");
             if (ifDrawRectExist) drawRect.remove();
             drawLayer.add(drawRect);
@@ -237,7 +252,15 @@ const inpainter = (function () {
 
       if (container instanceof HTMLDivElement) {
         const divElement = container.firstChild;
+        divElement?.addEventListener("mouseenter", function () {
+          if (cursorRing !== null) {
+            cursorRing.show();
+            cursorRing.moveToTop();
+          }
+        });
+
         divElement?.addEventListener("mouseleave", function () {
+          if (cursorRing !== null) cursorRing.hide();
           if (!isPaint) return;
           if (!drawingModeOn) return;
 
@@ -255,7 +278,16 @@ const inpainter = (function () {
         });
       } else {
         const divElement = document.querySelector(container)?.firstChild;
+
+        divElement?.addEventListener("mouseenter", function () {
+          if (cursorRing !== null) {
+            cursorRing.show();
+            cursorRing.moveToTop();
+          }
+        });
+
         divElement?.addEventListener("mouseleave", function () {
+          if (cursorRing !== null) cursorRing.hide();
           if (!isPaint) return;
           if (!drawingModeOn) return;
 
@@ -432,10 +464,9 @@ const inpainter = (function () {
         brushOptions.strokeWidth = width;
       }
       if (!drawingModeOn) return;
-      if (stage !== null) {
-        stage.container().style.cursor = getDrawCursor(
-          brushOptions.strokeWidth
-        );
+      if (cursorRing !== null) {
+        cursorRing?.innerRadius(brushOptions.strokeWidth / 2 / scale);
+        cursorRing?.outerRadius((brushOptions.strokeWidth / 2 + 3) / scale);
       }
     },
     setDrawingMode(mode: "brush" | "eraser" | "on" | "off") {
@@ -451,18 +482,16 @@ const inpainter = (function () {
         } else if (mode === "eraser") {
           drawingModeOn = true;
           drawLayer.show();
-          if (stage !== null) {
-            stage.container().style.cursor = getDrawCursor(
-              brushOptions.strokeWidth
-            );
+          if (cursorRing !== null) {
+            cursorRing?.innerRadius(brushOptions.strokeWidth / 2 / scale);
+            cursorRing?.outerRadius((brushOptions.strokeWidth / 2 + 3) / scale);
           }
         } else if (mode === "brush") {
           drawingModeOn = true;
           drawLayer.show();
-          if (stage !== null) {
-            stage.container().style.cursor = getDrawCursor(
-              brushOptions.strokeWidth
-            );
+          if (cursorRing !== null) {
+            cursorRing?.innerRadius(brushOptions.strokeWidth / 2 / scale);
+            cursorRing?.outerRadius((brushOptions.strokeWidth / 2 + 3) / scale);
           }
         }
 
@@ -487,10 +516,14 @@ const inpainter = (function () {
 
       const copyStage = stage.clone();
       copyStage.container().style.backgroundColor = "black";
-      const copyImageLayer = copyStage.findOne("#imageLayer");
+      const copyImageLayer = copyStage.findOne("#imageLayer") as Konva.Layer;
       copyImageLayer.hide();
       const copyDrawLayer = copyStage.findOne("#drawLayer") as Konva.Layer;
       copyDrawLayer.show();
+
+      const copyCursorLayer = copyStage.findOne("#cursorLayer") as Konva.Layer;
+      copyCursorLayer.hide();
+
       copyDrawLayer?.children?.forEach((el) => {
         if (el.id() === "drawRect") {
           el.remove();
@@ -546,6 +579,9 @@ const inpainter = (function () {
       const copyStage = stage.clone();
       const copyDrawLayer = copyStage.findOne("#drawLayer");
       copyDrawLayer.hide();
+      const copyCursorLayer = copyStage.findOne("#cursorLayer") as Konva.Layer;
+      copyCursorLayer.hide();
+
       const pngURL = copyStage.toDataURL({ pixelRatio: 2 });
       const imageElement = await loadImage(pngURL);
       if (context !== null) {
