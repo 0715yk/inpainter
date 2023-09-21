@@ -470,11 +470,12 @@ const inpainter = (function () {
       }
     },
     setDrawingMode(mode: "brush" | "eraser" | "on" | "off") {
-      if (stage !== null && drawLayer !== null) {
+      if (stage !== null && drawLayer !== null && cursorLayer !== null) {
         if (mode === "off") {
           drawLayer.hide();
           drawingModeOn = false;
           stage.container().style.cursor = "not-allowed";
+          cursorLayer.hide();
           return;
         } else if (mode === "on") {
           this.setDrawingMode(drawingMode);
@@ -482,6 +483,8 @@ const inpainter = (function () {
         } else if (mode === "eraser") {
           drawingModeOn = true;
           drawLayer.show();
+          stage.container().style.cursor = "none";
+          cursorLayer.show();
           if (cursorRing !== null) {
             cursorRing?.innerRadius(brushOptions.strokeWidth / 2 / scale);
             cursorRing?.outerRadius((brushOptions.strokeWidth / 2 + 3) / scale);
@@ -489,6 +492,8 @@ const inpainter = (function () {
         } else if (mode === "brush") {
           drawingModeOn = true;
           drawLayer.show();
+          stage.container().style.cursor = "none";
+          cursorLayer.show();
           if (cursorRing !== null) {
             cursorRing?.innerRadius(brushOptions.strokeWidth / 2 / scale);
             cursorRing?.outerRadius((brushOptions.strokeWidth / 2 + 3) / scale);
@@ -499,9 +504,10 @@ const inpainter = (function () {
       }
     },
     deleteImage() {
-      if (drawLayer !== null && imageLayer !== null) {
+      if (drawLayer !== null && imageLayer !== null && cursorLayer !== null) {
         drawLayer.removeChildren();
         imageLayer.removeChildren();
+        cursorLayer.removeChildren();
         history = [];
         historyStep = 0;
       }
