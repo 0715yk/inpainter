@@ -127,6 +127,7 @@ const inpainter = (function () {
                     });
                     cursorLayer = new Konva.Layer({
                         id: "cursorLayer",
+                        zIndex: 9999,
                     });
                     cursorRing = new Konva.Ring({
                         innerRadius: brushOptions.strokeWidth / 2 / scale,
@@ -135,7 +136,6 @@ const inpainter = (function () {
                         id: "ring",
                         stroke: "black",
                         strokeWidth: 0.6,
-                        zIndex: 9999,
                     });
                 }
                 stage.add(imageLayer);
