@@ -579,9 +579,11 @@ const inpainter = (function () {
         drawLayer.removeChildren();
         imageLayer.removeChildren();
         cursorLayer.hide();
-        history = [];
-        historyStep = 0;
       }
+    },
+    resetHistory() {
+      history = [];
+      historyStep = 0;
     },
     async exportMask() {
       if (stage === null) return;
