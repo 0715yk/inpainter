@@ -259,7 +259,8 @@ const inpainter = (function () {
         }
       });
 
-      stage.on("mouseup", () => {
+      stage.on("mouseup", ({ evt }) => {
+        evt.stopPropagation();
         if (stage === null) return;
         if (!drawingModeOn) return;
         if (!isPaint) return;
@@ -298,6 +299,12 @@ const inpainter = (function () {
         });
 
         divElement?.addEventListener("mouseleave", function () {
+          if (cursorLayer !== null) {
+            cursorLayer.hide();
+          }
+        });
+
+        window?.addEventListener("mouseup", function () {
           if (stage === null) return;
           if (cursorLayer !== null) cursorLayer.hide();
           if (!isPaint) return;
@@ -331,6 +338,12 @@ const inpainter = (function () {
         });
 
         divElement?.addEventListener("mouseleave", function () {
+          if (cursorLayer !== null) {
+            cursorLayer.hide();
+          }
+        });
+
+        window?.addEventListener("mouseup", function () {
           if (stage === null) return;
           if (cursorLayer !== null) cursorLayer.hide();
           if (!isPaint) return;
