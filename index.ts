@@ -38,7 +38,7 @@ const inpainter = (function () {
       return stage;
     },
     goTo(index: number) {
-      if (drawLayer === null || stage === null || drawRect === null) return;
+      if (drawLayer === null || stage === null) return;
 
       history = history.filter((line, _) => {
         if (_ >= index) {
@@ -47,16 +47,17 @@ const inpainter = (function () {
         } else {
           if (drawLayer !== null) {
             drawLayer.add(line);
+            if (drawRect !== null) {
+              const ifDrawRectExist = drawLayer.findOne("#drawRect");
+              if (ifDrawRectExist) drawRect.remove();
+              drawLayer.add(drawRect);
+            }
             return true;
           } else {
             return false;
           }
         }
       });
-
-      const ifDrawRectExist = drawLayer.findOne("#drawRect");
-      if (ifDrawRectExist) drawRect.remove();
-      drawLayer.add(drawRect);
 
       drawLayer.batchDraw();
       historyStep = index;
