@@ -31,7 +31,6 @@ declare const inpainter: {
     setStrokeWidth(width: number | string): void;
     setDrawingMode(mode: "brush" | "eraser" | "on" | "off"): void;
     deleteImage(): void;
-    undoDrawingHistory(): void;
     exportMask(): Promise<string | undefined>;
     exportImage(): Promise<string | undefined>;
     setDrawingLayer(cache: string): void;

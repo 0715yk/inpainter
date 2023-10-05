@@ -30,13 +30,6 @@ const inpainter = (function () {
     let currentLine = null;
     let drawRect = null;
     let cursorRing = null;
-    let cache = {
-        drawLayer: null,
-        history: {
-            historyArr: null,
-            historyStep: null,
-        },
-    };
     const containerSizeOption = { width: null, height: null };
     const eventListener = new EventListeners();
     return {
@@ -495,25 +488,11 @@ const inpainter = (function () {
         },
         deleteImage() {
             if (drawLayer !== null && imageLayer !== null && cursorLayer !== null) {
-                cache.drawLayer = drawLayer.clone();
-                cache.history.historyArr = history;
-                cache.history.historyStep = historyStep;
                 drawLayer.removeChildren();
                 imageLayer.removeChildren();
                 cursorLayer.hide();
                 history = [];
                 historyStep = 0;
-            }
-        },
-        undoDrawingHistory() {
-            if (stage !== null &&
-                cache.drawLayer !== null &&
-                cache.history.historyArr !== null &&
-                cache.history.historyStep !== null) {
-                stage.add(cache.drawLayer);
-                stage.batchDraw();
-                history = cache.history.historyArr;
-                historyStep = cache.history.historyStep;
             }
         },
         exportMask() {
