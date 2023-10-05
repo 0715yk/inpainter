@@ -586,10 +586,14 @@ const inpainter = (function () {
       }
     },
     deleteImage() {
-      if (drawLayer !== null && imageLayer !== null && cursorLayer !== null) {
-        drawLayer.removeChildren();
+      if (imageLayer !== null && cursorLayer !== null) {
         imageLayer.removeChildren();
         cursorLayer.hide();
+      }
+    },
+    resetDrawLayer() {
+      if (drawLayer !== null) {
+        drawLayer.removeChildren();
       }
     },
     resetHistory() {
