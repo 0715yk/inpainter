@@ -30,6 +30,13 @@ const inpainter = (function () {
     let currentLine = null;
     let drawRect = null;
     let cursorRing = null;
+    let cache = {
+        drawLayer: null,
+        history: {
+            historyArr: null,
+            historyStep: null,
+        },
+    };
     const containerSizeOption = { width: null, height: null };
     const eventListener = new EventListeners();
     return {
@@ -487,19 +494,27 @@ const inpainter = (function () {
             }
         },
         deleteImage() {
-            if (imageLayer !== null && cursorLayer !== null) {
+            if (drawLayer !== null && imageLayer !== null && cursorLayer !== null) {
+                cache.drawLayer = drawLayer.clone();
+                cache.history.historyArr = history;
+                cache.history.historyStep = historyStep;
+                drawLayer.removeChildren();
                 imageLayer.removeChildren();
                 cursorLayer.hide();
+                history = [];
+                historyStep = 0;
             }
         },
-        resetDrawLayer() {
-            if (drawLayer !== null) {
-                drawLayer.removeChildren();
+        undoDrawingHistory() {
+            if (stage !== null &&
+                cache.drawLayer !== null &&
+                cache.history.historyArr !== null &&
+                cache.history.historyStep !== null) {
+                stage.add(cache.drawLayer);
+                stage.batchDraw();
+                history = cache.history.historyArr;
+                historyStep = cache.history.historyStep;
             }
-        },
-        resetHistory() {
-            history = [];
-            historyStep = 0;
         },
         exportMask() {
             var _a;
@@ -575,6 +590,10 @@ const inpainter = (function () {
                     return pngURL;
                 }
             });
+        },
+        setDrawingLayer(cache) {
+            const parsedStage = JSON.parse(cache);
+            const copyDrawLayer = parsedStage.findOne("#drawLayer");
         },
     };
 })();
