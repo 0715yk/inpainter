@@ -45,7 +45,13 @@ const inpainter = (function () {
                     return false;
                 }
                 else {
-                    return true;
+                    if (drawLayer !== null) {
+                        drawLayer.add(line);
+                        return true;
+                    }
+                    else {
+                        return false;
+                    }
                 }
             });
             drawLayer.batchDraw();
