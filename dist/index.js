@@ -37,7 +37,7 @@ const inpainter = (function () {
             return stage;
         },
         goTo(index) {
-            if (drawLayer === null || stage === null)
+            if (drawLayer === null || stage === null || drawRect === null)
                 return;
             history = history.filter((line, _) => {
                 if (_ >= index) {
@@ -54,6 +54,10 @@ const inpainter = (function () {
                     }
                 }
             });
+            const ifDrawRectExist = drawLayer.findOne("#drawRect");
+            if (ifDrawRectExist)
+                drawRect.remove();
+            drawLayer.add(drawRect);
             drawLayer.batchDraw();
             historyStep = index;
             const copyStage = stage.clone();
