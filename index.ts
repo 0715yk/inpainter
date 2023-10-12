@@ -679,6 +679,25 @@ const inpainter = (function () {
         return pngURL;
       }
     },
+    async exportAll() {
+      if (stage === null) return;
+      const canvas = document.createElement("canvas");
+      const context = canvas.getContext("2d");
+
+      canvas.width = output.width;
+      canvas.height = output.height;
+      const copyStage = stage.clone();
+      const copyCursorLayer = copyStage.findOne("#cursorLayer") as Konva.Layer;
+      copyCursorLayer.hide();
+
+      const pngURL = copyStage.toDataURL({ pixelRatio: 2 });
+      const imageElement = await loadImage(pngURL);
+      if (context !== null) {
+        context.drawImage(imageElement, 0, 0, output.width, output.height);
+        const pngURL = canvas.toDataURL("image/png");
+        return pngURL;
+      }
+    },
     setDrawingLayer(cache: string) {
       const parsedStage = JSON.parse(cache);
       const copyDrawLayer = parsedStage.findOne("#drawLayer");

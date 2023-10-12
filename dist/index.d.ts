@@ -33,6 +33,7 @@ declare const inpainter: {
     deleteImage(): void;
     exportMask(): Promise<string | undefined>;
     exportImage(): Promise<string | undefined>;
+    exportAll(): Promise<string | undefined>;
     setDrawingLayer(cache: string): void;
 };
 export default inpainter;
