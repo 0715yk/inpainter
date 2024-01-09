@@ -615,7 +615,7 @@ const inpainter = (function () {
 
       copyDrawLayer?.children?.forEach((el) => {
         if (el.id() === "drawRect") {
-          el.remove();
+          el.hide();
         }
       });
 
