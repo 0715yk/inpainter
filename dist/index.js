@@ -517,7 +517,7 @@ const inpainter = (function () {
                         el.hide();
                     }
                 });
-                const pngURL = copyStage.toDataURL({ pixelRatio: 2 });
+                const pngURL = copyStage.toDataURL();
                 const imageElement = yield loadImage(pngURL);
                 if (context !== null) {
                     context.drawImage(imageElement, 0, 0, output.width, output.height);
@@ -561,7 +561,7 @@ const inpainter = (function () {
                 copyDrawLayer.hide();
                 const copyCursorLayer = copyStage.findOne("#cursorLayer");
                 copyCursorLayer.hide();
-                const pngURL = copyStage.toDataURL({ pixelRatio: 2 });
+                const pngURL = copyStage.toDataURL();
                 const imageElement = yield loadImage(pngURL);
                 if (context !== null) {
                     context.drawImage(imageElement, 0, 0, output.width, output.height);
@@ -581,7 +581,7 @@ const inpainter = (function () {
                 const copyStage = stage.clone();
                 const copyCursorLayer = copyStage.findOne("#cursorLayer");
                 copyCursorLayer.hide();
-                const pngURL = copyStage.toDataURL({ pixelRatio: 2 });
+                const pngURL = copyStage.toDataURL();
                 const imageElement = yield loadImage(pngURL);
                 if (context !== null) {
                     context.drawImage(imageElement, 0, 0, output.width, output.height);
