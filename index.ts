@@ -619,7 +619,12 @@ const inpainter = (function () {
         }
       });
 
-      const pngURL = copyStage.toDataURL("image/png");
+      const pngURL = copyStage.toDataURL(
+        {
+          mimeType: "image/png",
+        },
+        1
+      );
       const imageElement = await loadImage(pngURL);
       if (context !== null) {
         context.drawImage(imageElement, 0, 0, output.width, output.height);
@@ -671,7 +676,12 @@ const inpainter = (function () {
       const copyCursorLayer = copyStage.findOne("#cursorLayer") as Konva.Layer;
       copyCursorLayer.hide();
 
-      const pngURL = copyStage.toDataURL("image/png");
+      const pngURL = copyStage.toDataURL(
+        {
+          mimeType: "image/png",
+        },
+        1
+      );
       const imageElement = await loadImage(pngURL);
       if (context !== null) {
         context.drawImage(imageElement, 0, 0, output.width, output.height);
@@ -690,7 +700,12 @@ const inpainter = (function () {
       const copyCursorLayer = copyStage.findOne("#cursorLayer") as Konva.Layer;
       copyCursorLayer.hide();
 
-      const pngURL = copyStage.toDataURL("image/png");
+      const pngURL = copyStage.toDataURL(
+        {
+          mimeType: "image/png",
+        },
+        1
+      );
       const imageElement = await loadImage(pngURL);
       if (context !== null) {
         context.drawImage(imageElement, 0, 0, output.width, output.height);
