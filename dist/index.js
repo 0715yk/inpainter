@@ -514,7 +514,7 @@ const inpainter = (function () {
                 copyCursorLayer.hide();
                 (_a = copyDrawLayer === null || copyDrawLayer === void 0 ? void 0 : copyDrawLayer.children) === null || _a === void 0 ? void 0 : _a.forEach((el) => {
                     if (el.id() === "drawRect") {
-                        el.remove();
+                        el.hide();
                     }
                 });
                 const pngURL = copyStage.toDataURL({ pixelRatio: 2 });
