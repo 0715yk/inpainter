@@ -379,7 +379,7 @@ const inpainter = (function () {
                     height: stageH,
                 });
                 copyStage.add(imageLayer.clone());
-                const base64 = copyStage.toCanvas().toDataURL("image/png", 0);
+                const base64 = copyStage.toCanvas().toDataURL("image/png");
                 Object.assign(output, {
                     width: selectedWidth,
                     height: selectedHeight,
@@ -421,7 +421,7 @@ const inpainter = (function () {
                         }
                     }
                     context.putImageData(imgData, 0, 0);
-                    const transparentImageUrl = canvas.toDataURL();
+                    const transparentImageUrl = canvas.toDataURL("image/png");
                     const imageEl = (yield loadImage(transparentImageUrl));
                     const imageKonva = new Konva.Image({
                         image: imageEl,
@@ -517,7 +517,7 @@ const inpainter = (function () {
                         el.hide();
                     }
                 });
-                const pngURL = copyStage.toDataURL();
+                const pngURL = copyStage.toDataURL("image/png");
                 const imageElement = yield loadImage(pngURL);
                 if (context !== null) {
                     context.drawImage(imageElement, 0, 0, output.width, output.height);
@@ -561,7 +561,7 @@ const inpainter = (function () {
                 copyDrawLayer.hide();
                 const copyCursorLayer = copyStage.findOne("#cursorLayer");
                 copyCursorLayer.hide();
-                const pngURL = copyStage.toDataURL();
+                const pngURL = copyStage.toDataURL("image/png");
                 const imageElement = yield loadImage(pngURL);
                 if (context !== null) {
                     context.drawImage(imageElement, 0, 0, output.width, output.height);
@@ -581,7 +581,7 @@ const inpainter = (function () {
                 const copyStage = stage.clone();
                 const copyCursorLayer = copyStage.findOne("#cursorLayer");
                 copyCursorLayer.hide();
-                const pngURL = copyStage.toDataURL();
+                const pngURL = copyStage.toDataURL("image/png");
                 const imageElement = yield loadImage(pngURL);
                 if (context !== null) {
                     context.drawImage(imageElement, 0, 0, output.width, output.height);

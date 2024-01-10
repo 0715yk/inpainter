@@ -465,7 +465,7 @@ const inpainter = (function () {
       });
 
       copyStage.add(imageLayer.clone());
-      const base64 = copyStage.toCanvas().toDataURL("image/png", 0);
+      const base64 = copyStage.toCanvas().toDataURL("image/png");
       Object.assign(output, {
         width: selectedWidth,
         height: selectedHeight,
@@ -520,7 +520,7 @@ const inpainter = (function () {
 
         context.putImageData(imgData, 0, 0);
 
-        const transparentImageUrl = canvas.toDataURL() as string;
+        const transparentImageUrl = canvas.toDataURL("image/png") as string;
 
         const imageEl = (await loadImage(
           transparentImageUrl
@@ -619,7 +619,7 @@ const inpainter = (function () {
         }
       });
 
-      const pngURL = copyStage.toDataURL();
+      const pngURL = copyStage.toDataURL("image/png");
       const imageElement = await loadImage(pngURL);
       if (context !== null) {
         context.drawImage(imageElement, 0, 0, output.width, output.height);
@@ -671,7 +671,7 @@ const inpainter = (function () {
       const copyCursorLayer = copyStage.findOne("#cursorLayer") as Konva.Layer;
       copyCursorLayer.hide();
 
-      const pngURL = copyStage.toDataURL();
+      const pngURL = copyStage.toDataURL("image/png");
       const imageElement = await loadImage(pngURL);
       if (context !== null) {
         context.drawImage(imageElement, 0, 0, output.width, output.height);
@@ -690,7 +690,7 @@ const inpainter = (function () {
       const copyCursorLayer = copyStage.findOne("#cursorLayer") as Konva.Layer;
       copyCursorLayer.hide();
 
-      const pngURL = copyStage.toDataURL();
+      const pngURL = copyStage.toDataURL("image/png");
       const imageElement = await loadImage(pngURL);
       if (context !== null) {
         context.drawImage(imageElement, 0, 0, output.width, output.height);
